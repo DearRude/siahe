@@ -127,30 +127,6 @@ func handleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage
 			return fmt.Errorf("Error handle by state: %w", err)
 		}
 	}
-
-	// Sending reply.
-	// formats := []message.StyledTextOption{
-	// 	styling.Plain("plaintext"), styling.Plain("\n\n"),
-	// 	styling.Mention("@durov"), styling.Plain("\n\n"),
-	// 	styling.Hashtag("#hashtag"), styling.Plain("\n\n"),
-	// 	styling.BotCommand("/command"), styling.Plain("\n\n"),
-	// 	styling.URL("https://google.org"), styling.Plain("\n\n"),
-	// 	styling.Email("example@example.org"), styling.Plain("\n\n"),
-	// 	styling.Bold("bold"), styling.Plain("\n\n"),
-	// 	styling.Italic("italic"), styling.Plain("\n\n"),
-	// 	styling.Underline("underline"), styling.Plain("\n\n"),
-	// 	styling.Strike("strike"), styling.Plain("\n\n"),
-	// 	styling.Code("fmt.Println(`Hello, World!`)"), styling.Plain("\n\n"),
-	// 	styling.Pre("fmt.Println(`Hello, World!`)", "Go"), styling.Plain("\n\n"),
-	// 	styling.TextURL("clickme", "https://google.com"), styling.Plain("\n\n"),
-	// 	styling.Phone("+71234567891"), styling.Plain("\n\n"),
-	// 	styling.Cashtag("$CASHTAG"), styling.Plain("\n\n"),
-	// 	styling.Blockquote("blockquote"), styling.Plain("\n\n"),
-	// 	styling.BankCard("5550111111111111"), styling.Plain("\n\n"),
-	// }
-
-	// _, err := sender.Reply(ent, u).StyledText(c, formats...)
-	// _, err := sender.Reply(ent, u).Text(c, m.Message)
 	return nil
 }
 
@@ -158,8 +134,11 @@ func handleStates(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) er
 	m, _ := u.Message.(*tg.Message)
 
 	// Get sender user
-	user := getSenderUser(m, ent)
-	state, hasState := readFromState(user.ID)
+	userId, err := getSenderUserID(m)
+	if err != nil {
+		return err
+	}
+	state, hasState := readFromState(userId)
 	if !hasState {
 		return nil // No states found
 	}
@@ -181,12 +160,15 @@ func signUpAskFirstNameState(c context.Context, ent tg.Entities, u *tg.UpdateNew
 		if _, err := sender.Reply(ent, u).StyledText(c, messageHasNoText()...); err != nil {
 			return err
 		}
+		return nil
 	}
 	if !IsStringPersian(text) {
 		if _, err := sender.Reply(ent, u).StyledText(c, messageIsNotPersian()...); err != nil {
 			return err
 		}
+		return nil
 	}
+
 	return nil
 }
 func signUpAskLastNameState(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
@@ -201,7 +183,11 @@ func handleCommands(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) 
 	}
 
 	// Remove state of the user if a command is invoked
-	writeToState(getSenderUser(m, ent).ID, CommandState)
+	user, err := getSenderUserID(m)
+	if err != nil {
+		return err
+	}
+	writeToState(user, CommandState)
 
 	switch command {
 	case "start":
@@ -221,16 +207,19 @@ func startCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) er
 }
 func signupCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
 	m, _ := u.Message.(*tg.Message)
-	telUser := getSenderUser(m, ent)
+	userId, err := getSenderUserID(m)
+	if err != nil {
+		return err
+	}
 
 	var user User
-	if err := db.Model(&User{}).First(&user, telUser.ID).Error; err != nil {
+	if err := db.Model(&User{}).First(&user, userId).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// Accepted. Ask for first name
 			if _, err := sender.Reply(ent, u).StyledText(c, messageAskFirstName()...); err != nil {
 				return nil
 			}
-			writeToState(telUser.ID, SignUpAskFirstName)
+			writeToState(userId, SignUpAskFirstName)
 			return nil
 		} else {
 			return err
@@ -238,7 +227,7 @@ func signupCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) e
 	}
 
 	// User is found. They can't sign up again
-	_, err := sender.Reply(ent, u).StyledText(c, messageYouAlreadySignedUp(user.FirstName)...)
+	_, err = sender.Reply(ent, u).StyledText(c, messageYouAlreadySignedUp(user.FirstName)...)
 	return err
 }
 
@@ -249,15 +238,10 @@ func getCommandName(m *tg.Message) string {
 	return strings.Split(m.Message, " ")[0][1:]
 }
 
-func getSenderUser(m *tg.Message, ent tg.Entities) *tg.User {
-	uId, ok := m.FromID.(*tg.PeerUser)
+func getSenderUserID(m *tg.Message) (int64, error) {
+	peerUser, ok := m.GetPeerID().(*tg.PeerUser)
 	if !ok {
-		for _, user := range ent.Users {
-			if user.Self && user.Bot {
-				return nil
-			}
-			return user
-		}
+		return 0, fmt.Errorf("peerclass could not reflect to peer user")
 	}
-	return ent.Users[uId.UserID]
+	return peerUser.GetUserID(), nil
 }
