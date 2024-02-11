@@ -5,6 +5,7 @@ import (
 
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/telegram/message/styling"
+	"github.com/gotd/td/tg"
 )
 
 func messageYouAlreadySignedUp(name string) []message.StyledTextOption {
@@ -40,9 +41,11 @@ func messageAskPhone() []message.StyledTextOption {
 	}
 }
 
-func messageStart() []message.StyledTextOption {
+func messageStart(id int64) []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("سلام. خوش اومدی!"),
+		styling.Plain("سلام. خوش اومدی!\n"),
+		styling.Plain("این آیدی تلگرام توئه: "),
+		styling.Code(fmt.Sprintf("%d", id)),
 	}
 }
 
@@ -52,8 +55,27 @@ func messageIsNotPersian() []message.StyledTextOption {
 	}
 }
 
+func messageIsNotPhone() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("لطفاً شماره تلفن خود را به صورت صحیح وارد کنید."),
+	}
+}
+
 func messageHasNoText() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("پیام شما حاوی متن نیست."),
+	}
+}
+
+func buttonAskGender() []tg.KeyboardButtonClass {
+	return []tg.KeyboardButtonClass{
+		&tg.KeyboardButtonCallback{
+			Text: "آقا",
+			Data: []byte("SignupAskGender_man"),
+		},
+		&tg.KeyboardButtonCallback{
+			Text: "خانم",
+			Data: []byte("SignupAskGender_woman"),
+		},
 	}
 }

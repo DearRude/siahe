@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	"golang.org/x/time/rate"
 
@@ -18,41 +17,6 @@ import (
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
 )
-
-type UserState uint
-
-const (
-	CommandState UserState = iota
-	SignUpAskFirstName
-	SignUpAskLastName
-	SignUpAskPhoneNumber
-)
-
-var (
-	userStates  = make(map[int64]UserState)
-	statesMutex = sync.Mutex{}
-	sender      *message.Sender
-	db          *gorm.DB
-)
-
-func writeToState(userId int64, state UserState) {
-	statesMutex.Lock()
-	defer statesMutex.Unlock()
-	userStates[userId] = state
-}
-
-func readFromState(userId int64) (UserState, bool) {
-	statesMutex.Lock()
-	defer statesMutex.Unlock()
-	val, ok := userStates[userId]
-	return val, ok
-}
-
-func deleteFromState(userId int64) {
-	statesMutex.Lock()
-	defer statesMutex.Unlock()
-	delete(userStates, userId)
-}
 
 func main() {
 	c := GenConfig()
@@ -103,6 +67,7 @@ func main() {
 
 		// Setting up handler for incoming message.
 		dispatcher.OnNewMessage(handleNewMessage)
+		dispatcher.OnBotCallbackQuery(handleCallbacks)
 
 		select {}
 	}); err != nil {
@@ -110,116 +75,186 @@ func main() {
 	}
 }
 
+func handleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallbackQuery) error {
+	// Get sender user
+	user, err := getSenderUser(u.GetPeer(), ent)
+	if err != nil {
+		return err
+	}
+
+	updates := UpdateCallback{
+		Ctx:      ctx,
+		Ent:      ent,
+		Ubc:      u,
+		PeerUser: user.AsInputPeer(),
+	}
+
+	state, hasState := StateMap.Get(user.GetID())
+	if hasState {
+		switch state {
+		case SignUpAskGender:
+			return signUpAskGender(updates)
+		default:
+			return nil
+		}
+	}
+	return nil
+}
+
+func signUpAskGender(u UpdateCallback) error {
+	// TODO: Read data from callback query
+	return nil
+}
+
 func handleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	m, ok := u.Message.(*tg.Message)
-	if !ok || m.Out {
-		// Outgoing message, not interesting.
+	m, ok := u.GetMessage().(*tg.Message)
+	if !ok || m.Out { // Outgoing message, not interesting.
 		return nil
 	}
 
+	updates := UpdateMessage{
+		Ctx:     c,
+		Ent:     ent,
+		Unm:     u,
+		Message: m,
+	}
+	// Get sender user
+	user, err := getSenderUser(m.GetPeerID(), ent)
+	if err != nil {
+		return err
+	}
+	updates.SenderID = user.GetID()
+
 	// If new message is a command
 	if command := getCommandName(m); command != "" {
-		if err := handleCommands(c, ent, u); err != nil {
+		if err := handleCommands(updates); err != nil {
 			return fmt.Errorf("Error handle command %s: %w", command, err)
 		}
 	} else { // If not command, handle by state
-		if err := handleStates(c, ent, u); err != nil {
+		if err := handleMessageStates(updates); err != nil {
 			return fmt.Errorf("Error handle by state: %w", err)
 		}
 	}
 	return nil
 }
 
-func handleStates(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	m, _ := u.Message.(*tg.Message)
-
-	// Get sender user
-	userId, err := getSenderUserID(m)
-	if err != nil {
-		return err
-	}
-	state, hasState := readFromState(userId)
+func handleMessageStates(u UpdateMessage) error {
+	state, hasState := StateMap.Get(u.SenderID)
 	if !hasState {
 		return nil // No states found
 	}
 
 	switch state {
 	case SignUpAskFirstName:
-		return signUpAskFirstNameState(c, ent, u)
+		return signUpAskFirstNameState(u)
 	case SignUpAskLastName:
-		return signUpAskLastNameState(c, ent, u)
+		return signUpAskLastNameState(u)
+	case SignUpAskPhoneNumber:
+		return signUpAskPhoneNumber(u)
 	default:
 		return nil
 	}
 }
 
-func signUpAskFirstNameState(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	m, _ := u.Message.(*tg.Message)
-	text := m.Message
-	if text == "" {
-		if _, err := sender.Reply(ent, u).StyledText(c, messageHasNoText()...); err != nil {
-			return err
-		}
-		return nil
+func signUpAskFirstNameState(u UpdateMessage) error {
+	ok, err := CheckPersianText(u)
+	if err != nil {
+		return err
 	}
-	if !IsStringPersian(text) {
-		if _, err := sender.Reply(ent, u).StyledText(c, messageIsNotPersian()...); err != nil {
-			return err
-		}
+	if !ok {
 		return nil
 	}
 
-	return nil
-}
-func signUpAskLastNameState(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
+	// Add user to map
+	user := User{FirstName: u.Message.Message}
+	UserMap.Set(u.SenderID, user)
+
+	// Next state: Ask last name
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageAskLastName()...); err != nil {
+		return err
+	}
+	StateMap.Set(u.SenderID, SignUpAskLastName)
+
 	return nil
 }
 
-func handleCommands(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	m, _ := u.Message.(*tg.Message)
-	command := getCommandName(m)
+func signUpAskLastNameState(u UpdateMessage) error {
+	ok, err := CheckPersianText(u)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
+	// Update user
+	user, _ := UserMap.Get(u.SenderID)
+	user.LastName = u.Message.Message
+	UserMap.Set(u.SenderID, user)
+
+	// Next state: Ask phone number
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageAskPhone()...); err != nil {
+		return err
+	}
+	StateMap.Set(u.SenderID, SignUpAskPhoneNumber)
+
+	return nil
+}
+
+func signUpAskPhoneNumber(u UpdateMessage) error {
+	ok, err := CheckPhoneText(u)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
+	// Update user
+	user, _ := UserMap.Get(u.SenderID)
+	user.PhoneNumber = u.Message.Message
+	UserMap.Set(u.SenderID, user)
+
+	// Next state: Ask gender
+	// TODO: send callback query button
+	StateMap.Set(u.SenderID, SignUpAskGender)
+
+	return nil
+}
+
+func handleCommands(u UpdateMessage) error {
+	command := getCommandName(u.Message)
 	if command == "" {
 		return nil
 	}
 
-	// Remove state of the user if a command is invoked
-	user, err := getSenderUserID(m)
-	if err != nil {
-		return err
-	}
-	writeToState(user, CommandState)
+	StateMap.Set(u.SenderID, CommandState)
 
 	switch command {
 	case "start":
-		return startCommand(c, ent, u)
+		return startCommand(u)
 	case "signup":
-		return signupCommand(c, ent, u)
+		return signupCommand(u)
 	default:
 		return nil
 	}
 }
 
-func startCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	if _, err := sender.Reply(ent, u).StyledText(c, messageStart()...); err != nil {
+func startCommand(u UpdateMessage) error {
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageStart(u.SenderID)...); err != nil {
 		return err
 	}
 	return nil
 }
-func signupCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
-	m, _ := u.Message.(*tg.Message)
-	userId, err := getSenderUserID(m)
-	if err != nil {
-		return err
-	}
-
+func signupCommand(u UpdateMessage) error {
 	var user User
-	if err := db.Model(&User{}).First(&user, userId).Error; err != nil {
+	if err := db.Model(&User{}).First(&user, u.SenderID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// Accepted. Ask for first name
-			if _, err := sender.Reply(ent, u).StyledText(c, messageAskFirstName()...); err != nil {
+			if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageAskFirstName()...); err != nil {
 				return nil
 			}
-			writeToState(userId, SignUpAskFirstName)
+			StateMap.Set(u.SenderID, SignUpAskFirstName)
 			return nil
 		} else {
 			return err
@@ -227,21 +262,26 @@ func signupCommand(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) e
 	}
 
 	// User is found. They can't sign up again
-	_, err = sender.Reply(ent, u).StyledText(c, messageYouAlreadySignedUp(user.FirstName)...)
+	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageYouAlreadySignedUp(user.FirstName)...)
 	return err
 }
 
 func getCommandName(m *tg.Message) string {
-	if len(m.Message) <= 0 || m.Message[0] != '/' {
+	text := m.GetMessage()
+	if len(text) <= 0 || text[0] != '/' {
 		return ""
 	}
-	return strings.Split(m.Message, " ")[0][1:]
+	return strings.Split(text, " ")[0][1:]
 }
 
-func getSenderUserID(m *tg.Message) (int64, error) {
-	peerUser, ok := m.GetPeerID().(*tg.PeerUser)
+func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {
+	peerUser, ok := peer.(*tg.PeerUser)
 	if !ok {
-		return 0, fmt.Errorf("peerclass could not reflect to peer user")
+		return nil, fmt.Errorf("peerclass could not reflect to peer user")
 	}
-	return peerUser.GetUserID(), nil
+	user, ok := ent.Users[peerUser.GetUserID()]
+	if !ok {
+		return nil, fmt.Errorf("user not found in entities")
+	}
+	return user, nil
 }
