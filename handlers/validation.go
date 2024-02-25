@@ -1,7 +1,9 @@
-package main
+package handlers
 
 import (
 	"regexp"
+
+	in "github.com/DearRude/fumTheatreBot/internals"
 )
 
 func IsStringPersian(text string) bool {
@@ -14,16 +16,16 @@ func IsStringPhoneNumber(text string) bool {
 	return phoneRegex.MatchString(text)
 }
 
-func CheckPersianText(u Update) (bool, error) {
+func CheckPersianText(u in.UpdateMessage) (bool, error) {
 	text := u.Message.GetMessage()
 	if text == "" {
-		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageHasNoText()...); err != nil {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageHasNoText()...); err != nil {
 			return false, err
 		}
 		return false, nil
 	}
 	if !IsStringPersian(text) {
-		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageIsNotPersian()...); err != nil {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageIsNotPersian()...); err != nil {
 			return false, err
 		}
 		return false, nil
@@ -31,16 +33,16 @@ func CheckPersianText(u Update) (bool, error) {
 	return true, nil
 }
 
-func CheckPhoneText(u Update) (bool, error) {
+func CheckPhoneText(u in.UpdateMessage) (bool, error) {
 	text := u.Message.GetMessage()
 	if text == "" {
-		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageHasNoText()...); err != nil {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageHasNoText()...); err != nil {
 			return false, err
 		}
 		return false, nil
 	}
 	if !IsStringPhoneNumber(text) {
-		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, messageIsNotPhone()...); err != nil {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageIsNotPhone()...); err != nil {
 			return false, err
 		}
 		return false, nil

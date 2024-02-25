@@ -1,13 +1,12 @@
-package main
+package internals
 
 import (
 	"context"
 	"sync"
 
-	"gorm.io/gorm"
-
-	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
+
+	db "github.com/DearRude/fumTheatreBot/database"
 )
 
 type UserState uint
@@ -20,20 +19,12 @@ const (
 	SignUpAskGender
 )
 
-var (
-	StateMap = &UserStateMap{data: make(map[int64]UserState)}
-	UserMap  = &UserDataMap{data: make(map[int64]User)}
-
-	sender *message.Sender
-	db     *gorm.DB
-)
-
 type UpdateMessage struct {
 	Ctx context.Context
 	Ent tg.Entities
 	Unm *tg.UpdateNewMessage
 
-	SenderID int64
+	PeerUser *tg.InputPeerUser
 	Message  *tg.Message
 }
 
@@ -48,6 +39,11 @@ type UpdateCallback struct {
 type UserStateMap struct {
 	data map[int64]UserState
 	mu   sync.RWMutex
+}
+
+// Constructor
+func NewUserStateMap() UserStateMap {
+	return UserStateMap{data: make(map[int64]UserState)}
 }
 
 // Set adds or updates a user state in the map
@@ -74,19 +70,24 @@ func (m *UserStateMap) Delete(userID int64) {
 
 // UserDataMap is a concurrent-safe map for user data
 type UserDataMap struct {
-	data map[int64]User
+	data map[int64]db.User
 	mu   sync.RWMutex
 }
 
+// Constructor
+func NewUserDataMap() UserDataMap {
+	return UserDataMap{data: make(map[int64]db.User)}
+}
+
 // Set adds or updates a user in the map
-func (m *UserDataMap) Set(userID int64, userData User) {
+func (m *UserDataMap) Set(userID int64, userData db.User) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.data[userID] = userData
 }
 
 // Get retrieves the user data associated with the given user ID
-func (m *UserDataMap) Get(userID int64) (User, bool) {
+func (m *UserDataMap) Get(userID int64) (db.User, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	userData, ok := m.data[userID]

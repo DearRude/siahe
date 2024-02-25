@@ -1,4 +1,4 @@
-package main
+package internals
 
 import (
 	"fmt"
@@ -8,13 +8,13 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-func messageYouAlreadySignedUp(name string) []message.StyledTextOption {
+func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain(fmt.Sprintf("%s عزیز، شما قبلاً ثبت‌نام کرده‌اید.", name)),
 	}
 }
 
-func messageAskFirstName() []message.StyledTextOption {
+func MessageAskFirstName() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("لطفاً نام کوچک خود را به فارسی وارد کنید."),
 		styling.Plain("\n"),
@@ -23,7 +23,7 @@ func messageAskFirstName() []message.StyledTextOption {
 	}
 }
 
-func messageAskLastName() []message.StyledTextOption {
+func MessageAskLastName() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("لطفاً نام خانوادگی خود را به فارسی وارد کنید."),
 		styling.Plain("\n"),
@@ -32,16 +32,13 @@ func messageAskLastName() []message.StyledTextOption {
 	}
 }
 
-func messageAskPhone() []message.StyledTextOption {
+func MessageAskPhone() []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("لطفاً شماره تلفن خود را با اعداد لاتین وارد کنید."),
-		styling.Plain("\n"),
-		styling.Plain("برای مثال: "),
-		styling.Bold("09123456789"),
+		styling.Plain("لطفاً شماره تلفن خود را با زدن دکمه Markup وارد کنید."),
 	}
 }
 
-func messageStart(id int64) []message.StyledTextOption {
+func MessageStart(id int64) []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("سلام. خوش اومدی!\n"),
 		styling.Plain("این آیدی تلگرام توئه: "),
@@ -49,33 +46,54 @@ func messageStart(id int64) []message.StyledTextOption {
 	}
 }
 
-func messageIsNotPersian() []message.StyledTextOption {
+func MessageIsNotPersian() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("فقط از حروف فارسی استفاده کنید."),
 	}
 }
 
-func messageIsNotPhone() []message.StyledTextOption {
+func MessageIsNotPhone() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("لطفاً شماره تلفن خود را به صورت صحیح وارد کنید."),
 	}
 }
 
-func messageHasNoText() []message.StyledTextOption {
+func MessageHasNoText() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("پیام شما حاوی متن نیست."),
 	}
 }
 
-func buttonAskGender() []tg.KeyboardButtonClass {
+func MessageAskGender() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("جنسیت خود را انتخاب کنید:"),
+	}
+}
+
+func ButtonAskGender() []tg.KeyboardButtonClass {
 	return []tg.KeyboardButtonClass{
 		&tg.KeyboardButtonCallback{
 			Text: "آقا",
-			Data: []byte("SignupAskGender_man"),
+			Data: []byte("SignupAskGender_boy"),
 		},
 		&tg.KeyboardButtonCallback{
 			Text: "خانم",
-			Data: []byte("SignupAskGender_woman"),
+			Data: []byte("SignupAskGender_girl"),
+		},
+	}
+}
+
+func ButtonAskPhone() *tg.ReplyKeyboardMarkup {
+	return &tg.ReplyKeyboardMarkup{
+		Resize:     true,
+		SingleUse:  true,
+		Persistent: false,
+		Rows: []tg.KeyboardButtonRow{
+			{
+				Buttons: []tg.KeyboardButtonClass{
+					&tg.KeyboardButtonRequestPhone{Text: "شماره خود را به اشتراک بگذارید"},
+				},
+			},
 		},
 	}
 }
