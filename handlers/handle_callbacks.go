@@ -44,11 +44,14 @@ func signUpAskIsFumStudent(u in.UpdateCallback) error {
 		return err
 	}
 
+	// Assign already-defined variables
 	user.IsFumStudent = isTrue
 	if isTrue {
 		user.IsStudent = true
 		user.IsMashhadStudent = true
 		user.UniversityName = "دانشگاه فردوسی مشهد"
+		user.IsGraduateStudent = false
+		user.IsStudentRelative = false
 	}
 	UserMap.Set(u.PeerUser.UserID, user)
 
@@ -59,7 +62,6 @@ func signUpAskIsFumStudent(u in.UpdateCallback) error {
 		}
 		StateMap.Set(u.PeerUser.UserID, in.SignUpAskStudentNumber)
 	} else {
-
 		// Next state: Ask if is student
 		if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageAskIsStudent()...); err != nil {
 			return err
@@ -149,11 +151,11 @@ func signUpAskIsStudentRelative(u in.UpdateCallback) error {
 	user.IsStudentRelative = isTrue
 	UserMap.Set(u.PeerUser.UserID, user)
 
-	// signUp finished
-	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageSignUpFinished(user.FirstName)...); err != nil {
+	// Next state: Check info
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsInfoCorrect(user)...); err != nil {
 		return err
 	}
-	StateMap.Set(u.PeerUser.UserID, in.CommandState)
+	StateMap.Set(u.PeerUser.UserID, in.SignUpCheckInfo)
 
 	return nil
 }
@@ -165,16 +167,15 @@ func signUpAskFumFaculty(u in.UpdateCallback) error {
 	if !ok {
 		return fmt.Errorf("Error getting callback data")
 	}
-	facultyName := string(data)
 
-	user.FumFaculty = &facultyName
+	user.FumFaculty = string(data)
 	UserMap.Set(u.PeerUser.UserID, user)
 
-	// Next state: Is Master/Phd student
-	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageAskIsMastPhd()...); err != nil {
+	// Next state: Ask entrance year
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageAskEntranceYear()...); err != nil {
 		return err
 	}
-	StateMap.Set(u.PeerUser.UserID, in.SignUpAskIsMastPhd)
+	StateMap.Set(u.PeerUser.UserID, in.SignUpAskEntraceYear)
 
 	return nil
 }
@@ -187,7 +188,7 @@ func signUpAskMastPhd(u in.UpdateCallback) error {
 		return err
 	}
 
-	user.IsGraduateStudent = isTrue
+	user.IsMastPhd = isTrue
 	UserMap.Set(u.PeerUser.UserID, user)
 
 	// Next state: Ask student major
@@ -195,6 +196,38 @@ func signUpAskMastPhd(u in.UpdateCallback) error {
 		return err
 	}
 	StateMap.Set(u.PeerUser.UserID, in.SignUpAskStudentMajor)
+
+	return nil
+}
+
+func signUpCheckInfo(u in.UpdateCallback) error {
+	user, _ := UserMap.Get(u.PeerUser.UserID)
+
+	isTrue, err := getYesNoButtonAnswer(u)
+	if err != nil {
+		return err
+	}
+
+	StateMap.Set(u.PeerUser.UserID, in.CommandState)
+
+	// Cancel signup
+	if !isTrue {
+		if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageCancelSignUp()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Add user to db
+	res := db.Create(&user)
+	if res.Error != nil {
+		return err
+	}
+
+	// Finish singUp
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageSignUpFinished(user.FirstName)...); err != nil {
+		return err
+	}
 
 	return nil
 }

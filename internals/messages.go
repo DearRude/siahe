@@ -7,6 +7,8 @@ import (
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/telegram/message/styling"
 	"github.com/gotd/td/tg"
+
+	db "github.com/DearRude/fumTheatreBot/database"
 )
 
 func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {
@@ -164,6 +166,12 @@ func MessageSignUpFinished(name string) []message.StyledTextOption {
 	}
 }
 
+func MessageCancelSignUp() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("ثبت‌نام کنسل شد. در صورت درخواست، دوباره امتحان کنید"),
+	}
+}
+
 func ButtonYesNo() []tg.KeyboardButtonClass {
 	return []tg.KeyboardButtonClass{
 		markup.Callback("بله", []byte("yes")),
@@ -227,4 +235,90 @@ func ButtonAskPhone() tg.ReplyMarkupClass {
 		SingleUse().
 		Build(markup.Row(markup.
 			RequestPhone("شماره خود را به اشتراک بگذارید")))
+}
+
+func MessagePrintUser(user db.User) []message.StyledTextOption {
+	boolToText := func(b bool) string {
+		if b {
+			return "بله"
+		}
+		return "خیر"
+	}
+
+	boolToGender := func(b bool) string {
+		if b {
+			return "مرد"
+		}
+		return "زن"
+	}
+
+	m := []message.StyledTextOption{
+		styling.Plain("کاربر با آیدی: "),
+		styling.Code(fmt.Sprintf("%d", user.ID)),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام: "),
+		styling.Plain(user.FirstName),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام خانوادگی: "),
+		styling.Plain(user.LastName),
+		styling.Plain("\n"), // newline
+		styling.Bold("شماره تلفن: "),
+		styling.Phone(user.PhoneNumber),
+		styling.Plain("\n"), // newline
+		styling.Bold("جنس: "),
+		styling.Plain(boolToGender(user.IsBoy)),
+		styling.Plain("\n"), // newline
+		styling.Bold("دانشجوی فردوسی؟ "),
+		styling.Plain(boolToText(user.IsFumStudent)),
+		styling.Plain("\n"), // newline
+		styling.Bold("دانشجو؟ "),
+		styling.Plain(boolToText(user.IsStudent)),
+		styling.Plain("\n"), // newline
+		styling.Bold("دانشجوی مشهد؟ "),
+		styling.Plain(boolToText(user.IsMashhadStudent)),
+		styling.Plain("\n"), // newline
+		styling.Bold("دانشجوی فارغ التحصیل؟ "),
+		styling.Plain(boolToText(user.IsGraduateStudent)),
+		styling.Plain("\n"), // newline
+		styling.Bold("خانواده فردوسی؟ "),
+		styling.Plain(boolToText(user.IsStudentRelative)),
+		styling.Plain("\n"), // newline
+	}
+	if user.IsStudent {
+		m = append(m, []styling.StyledTextOption{
+			styling.Bold("نام دانشگاه: "),
+			styling.Plain(user.UniversityName),
+			styling.Plain("\n"), // newline
+			styling.Bold("سال ورود: "),
+			styling.Code(user.EntranceYear),
+			styling.Plain("\n"), // newline
+			styling.Bold("دانشجوی تحصیلات تکمیلی؟ "),
+			styling.Plain(boolToText(user.IsMashhadStudent)),
+			styling.Plain("\n"), // newline
+			styling.Bold("رشته تحصیلی: "),
+			styling.Plain(user.StudentMajor),
+			styling.Plain("\n"), // newline
+		}...)
+	}
+	if user.IsFumStudent {
+		m = append(m, []styling.StyledTextOption{
+			styling.Bold("شماره دانشجویی: "),
+			styling.Code(user.StudentNumber),
+			styling.Plain("\n"), // newline
+			styling.Bold("دانشکده تحصیل: "),
+			styling.Plain(user.FumFaculty),
+		}...)
+	}
+
+	return m
+}
+
+func MessageIsInfoCorrect(user db.User) []message.StyledTextOption {
+
+	m := []message.StyledTextOption{
+		styling.Plain("آیا اطلاعات وارد شده صحیح است؟"),
+		styling.Plain("\n\n"), // newline
+	}
+
+	return append(m, MessagePrintUser(user)...)
 }

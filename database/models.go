@@ -13,16 +13,16 @@ type User struct {
 	IsBoy       bool
 
 	IsFumStudent  bool
-	StudentNumber *string
-	FumFaculty    *string
+	StudentNumber string
+	FumFaculty    string
 
 	IsStudent        bool
 	IsMashhadStudent bool
 
 	UniversityName string
-	EntraceYear    *string
 
-	IsMastPhd    *bool
+	EntranceYear string
+	IsMastPhd    bool
 	StudentMajor string
 
 	IsGraduateStudent bool

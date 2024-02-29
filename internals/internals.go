@@ -28,6 +28,7 @@ const (
 	SignUpAskStudentMajor
 	SignUpAskIsGraduate
 	SignUpAskIsStudentRelative
+	SignUpCheckInfo
 )
 
 type UpdateMessage struct {

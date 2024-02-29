@@ -98,6 +98,8 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallba
 			return signUpAskFumFaculty(updates)
 		case in.SignUpAskIsMastPhd:
 			return signUpAskMastPhd(updates)
+		case in.SignUpCheckInfo:
+			return signUpCheckInfo(updates)
 		default:
 			return nil
 		}

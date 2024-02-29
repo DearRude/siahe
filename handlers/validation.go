@@ -23,7 +23,7 @@ func IsStringStudentNumber(text string) bool {
 }
 
 func IsStringEntraceYear(text string) bool {
-	phoneRegex := regexp.MustCompile(`^1[3-4][5-9][0-9]$`)
+	phoneRegex := regexp.MustCompile(`^1[3-4][0-9][0-9]$`)
 	return phoneRegex.MatchString(text)
 }
 

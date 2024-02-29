@@ -127,7 +127,7 @@ func signUpAskStudentNumber(u in.UpdateMessage) error {
 
 	// Update user
 	user, _ := UserMap.Get(u.PeerUser.UserID)
-	user.StudentNumber = &u.Message.Message
+	user.StudentNumber = u.Message.Message
 	UserMap.Set(u.PeerUser.UserID, user)
 
 	// React ok
@@ -163,11 +163,11 @@ func signUpAskStudentMajor(u in.UpdateMessage) error {
 		return err
 	}
 
-	// signUp finished
-	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageSignUpFinished(user.FirstName)...); err != nil {
+	// Next state: Check info
+	if _, err := sender.Reply(u.Ent, u.Unm).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsInfoCorrect(user)...); err != nil {
 		return err
 	}
-	StateMap.Set(u.PeerUser.UserID, in.CommandState)
+	StateMap.Set(u.PeerUser.UserID, in.SignUpCheckInfo)
 
 	return nil
 }
@@ -211,7 +211,7 @@ func signUpAskEntranceYear(u in.UpdateMessage) error {
 
 	// Update user
 	user, _ := UserMap.Get(u.PeerUser.UserID)
-	user.EntraceYear = &u.Message.Message
+	user.EntranceYear = u.Message.Message
 	UserMap.Set(u.PeerUser.UserID, user)
 
 	// React ok
