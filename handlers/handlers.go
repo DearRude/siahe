@@ -17,10 +17,12 @@ var (
 	UserMap  = in.NewUserDataMap()
 
 	sender *message.Sender
+	client *tg.Client
 	db     *gorm.DB
 )
 
-func InitHandlers(database *gorm.DB, messageSender *message.Sender) {
+func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender) {
+	client = tgClient
 	sender = messageSender
 	db = database
 }
@@ -31,18 +33,19 @@ func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage
 		return nil
 	}
 
-	updates := in.UpdateMessage{
-		Ctx:     c,
-		Ent:     ent,
-		Unm:     u,
-		Message: m,
-	}
 	// Get sender user
 	user, err := getSenderUser(m.GetPeerID(), ent)
 	if err != nil {
 		return err
 	}
-	updates.PeerUser = user.AsInputPeer()
+
+	updates := in.UpdateMessage{
+		Ctx:      c,
+		Ent:      ent,
+		Unm:      u,
+		Message:  m,
+		PeerUser: user.AsInputPeer(),
+	}
 
 	// If new message is a command
 	if command := getCommandName(m); command != "" {
@@ -64,6 +67,11 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallba
 		return err
 	}
 
+	_, err = client.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{
+		QueryID: u.QueryID,
+		Message: "حله!",
+	})
+
 	updates := in.UpdateCallback{
 		Ctx:      ctx,
 		Ent:      ent,
@@ -76,6 +84,20 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallba
 		switch state {
 		case in.SignUpAskGender:
 			return signUpAskGender(updates)
+		case in.SignUpAskIsFumStudent:
+			return signUpAskIsFumStudent(updates)
+		case in.SignUpAskIsStudent:
+			return signUpAskIsStudent(updates)
+		case in.SignUpAskIsMashhadStudent:
+			return signUpAskIsMashhadStudent(updates)
+		case in.SignUpAskIsGraduate:
+			return signUpAskIsGraduate(updates)
+		case in.SignUpAskIsStudentRelative:
+			return signUpAskIsStudentRelative(updates)
+		case in.SignUpAskFumFaculty:
+			return signUpAskFumFaculty(updates)
+		case in.SignUpAskIsMastPhd:
+			return signUpAskMastPhd(updates)
 		default:
 			return nil
 		}

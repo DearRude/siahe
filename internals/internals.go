@@ -17,6 +17,17 @@ const (
 	SignUpAskLastName
 	SignUpAskPhoneNumber
 	SignUpAskGender
+	SignUpAskIsFumStudent
+	SignUpAskStudentNumber
+	SignUpAskFumFaculty
+	SignUpAskIsStudent
+	SignUpAskIsMashhadStudent
+	SignUpAskIsMastPhd
+	SignUpAskUniversityName
+	SignUpAskEntraceYear
+	SignUpAskStudentMajor
+	SignUpAskIsGraduate
+	SignUpAskIsStudentRelative
 )
 
 type UpdateMessage struct {

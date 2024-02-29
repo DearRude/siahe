@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -43,8 +44,25 @@ func getTextFromContact(u in.UpdateMessage) (string, error) {
 	return contact.GetPhoneNumber(), nil
 }
 
+func getYesNoButtonAnswer(u in.UpdateCallback) (bool, error) {
+	data, ok := u.Ubc.GetData()
+	if !ok {
+		return false, fmt.Errorf("Error getting callback data")
+	}
+
+	var isTrue bool
+	if bytes.Equal(data, []byte("yes")) {
+		isTrue = true
+	} else if bytes.Equal(data, []byte("no")) {
+		isTrue = false
+	} else {
+		return false, fmt.Errorf("Invalid query data is sent")
+	}
+	return isTrue, nil
+}
+
 func reactToMessage(u in.UpdateMessage, emoji string) error {
-	_, err := sender.To(u.PeerUser).Reaction(u.Ctx, u.Message.ID, &tg.ReactionEmoji{
+	_, err := sender.To(u.PeerUser).Reaction(u.Ctx, u.Message.GetID(), &tg.ReactionEmoji{
 		Emoticon: emoji,
 	})
 	return err
