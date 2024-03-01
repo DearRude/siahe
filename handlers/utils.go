@@ -10,12 +10,22 @@ import (
 	in "github.com/DearRude/fumTheatreBot/internals"
 )
 
-func getCommandName(m *tg.Message) string {
-	text := m.GetMessage()
+func getCommandName(u in.UpdateMessage) string {
+	text := u.Message.GetMessage()
 	if len(text) <= 0 || text[0] != '/' {
 		return ""
 	}
 	return strings.Split(text, " ")[0][1:]
+}
+
+func getCommandParams(u in.UpdateMessage) []string {
+	text := u.Message.GetMessage()
+	return strings.Split(text, " ")[1:]
+}
+
+func getCommandLines(u in.UpdateMessage) []string {
+	text := u.Message.GetMessage()
+	return strings.Split(text, "\n\n")[1:]
 }
 
 func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {

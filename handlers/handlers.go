@@ -16,15 +16,17 @@ var (
 	StateMap = in.NewUserStateMap()
 	UserMap  = in.NewUserDataMap()
 
-	sender *message.Sender
-	client *tg.Client
-	db     *gorm.DB
+	sender        *message.Sender
+	client        *tg.Client
+	db            *gorm.DB
+	adminPassword string
 )
 
-func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender) {
+func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, adminPass string) {
 	client = tgClient
 	sender = messageSender
 	db = database
+	adminPassword = adminPass
 }
 
 func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
@@ -48,7 +50,7 @@ func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage
 	}
 
 	// If new message is a command
-	if command := getCommandName(m); command != "" {
+	if command := getCommandName(updates); command != "" {
 		if err := handleCommands(updates); err != nil {
 			return fmt.Errorf("Error handle command %s: %w", command, err)
 		}
