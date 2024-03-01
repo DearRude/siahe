@@ -164,7 +164,7 @@ func signUpAskStudentMajor(u in.UpdateMessage) error {
 	}
 
 	// Next state: Check info
-	if _, err := sender.Reply(u.Ent, u.Unm).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsInfoCorrect(user)...); err != nil {
+	if _, err := sender.Reply(u.Ent, u.Unm).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsUserInfoCorrect(user)...); err != nil {
 		return err
 	}
 	StateMap.Set(u.PeerUser.UserID, in.SignUpCheckInfo)

@@ -183,6 +183,27 @@ func MessageCancelSignUp() []message.StyledTextOption {
 	}
 }
 
+func MessageAddPlaceHelp() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("اطلاعات را با خط تیره - فاصله گذاری کنید. \n"),
+		styling.Plain("اطلاعات مربوط به «مکان» عبارت‌اند از: "),
+		styling.Bold("نام، آدرس، ظرفیت\n"),
+		styling.Plain("برای مثال: \n\n"),
+	}
+}
+
+func MessageAddPlaceExample() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("/addPlace"),
+		styling.Plain("\n-\n"),
+		styling.Plain("اتاق آروین"),
+		styling.Plain("\n-\n"),
+		styling.Plain("دانشگاه فردوسی، ساختمان کانون‌های فرهنگی، اتاق آروین"),
+		styling.Plain("\n-\n"),
+		styling.Plain("30"),
+	}
+}
+
 func ButtonYesNo() []tg.KeyboardButtonClass {
 	return []tg.KeyboardButtonClass{
 		markup.Callback("بله", []byte("yes")),
@@ -264,7 +285,7 @@ func MessagePrintUser(user db.User) []message.StyledTextOption {
 	}
 
 	m := []message.StyledTextOption{
-		styling.Plain("کاربر با آیدی: "),
+		styling.Bold("کاربر با آیدی: "),
 		styling.Code(fmt.Sprintf("%d", user.ID)),
 		styling.Plain("\n"), // newline
 		styling.Bold("نام: "),
@@ -324,12 +345,51 @@ func MessagePrintUser(user db.User) []message.StyledTextOption {
 	return m
 }
 
-func MessageIsInfoCorrect(user db.User) []message.StyledTextOption {
-
+func MessageIsUserInfoCorrect(user db.User) []message.StyledTextOption {
 	m := []message.StyledTextOption{
 		styling.Plain("آیا اطلاعات وارد شده صحیح است؟"),
 		styling.Plain("\n\n"), // newline
 	}
 
 	return append(m, MessagePrintUser(user)...)
+}
+
+func MessagePrintPlace(place db.Place) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Bold("مکان با آیدی: "),
+		styling.Code(fmt.Sprintf("%d", place.ID)),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام: "),
+		styling.Plain(place.Name),
+		styling.Plain("\n"), // newline
+		styling.Bold("آدرس: "),
+		styling.Plain(place.Address),
+		styling.Plain("\n"), // newline
+		styling.Bold("ظرفیت: "),
+		styling.Code(fmt.Sprintf("%d", place.Capacity)),
+	}
+}
+
+func MessagePrintPlaces(places []db.Place) []message.StyledTextOption {
+	m := []message.StyledTextOption{
+		styling.Bold("مکان‌های ثبت شده: \n\n"),
+	}
+
+	for _, place := range places {
+		m = append(m, []styling.StyledTextOption{
+			styling.Code(fmt.Sprintf("%d", place.ID)),
+			styling.Plain(fmt.Sprintf(": %s\n", place.Name)),
+		}...)
+	}
+
+	return m
+}
+
+func MessagePlaceAdded(place db.Place) []message.StyledTextOption {
+	m := []message.StyledTextOption{
+		styling.Plain("مکان زیر اضافه شد!"),
+		styling.Plain("\n\n"), // newline
+	}
+
+	return append(m, MessagePrintPlace(place)...)
 }

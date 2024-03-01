@@ -152,7 +152,7 @@ func signUpAskIsStudentRelative(u in.UpdateCallback) error {
 	UserMap.Set(u.PeerUser.UserID, user)
 
 	// Next state: Check info
-	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsInfoCorrect(user)...); err != nil {
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).Row(in.ButtonYesNo()...).StyledText(u.Ctx, in.MessageIsUserInfoCorrect(user)...); err != nil {
 		return err
 	}
 	StateMap.Set(u.PeerUser.UserID, in.SignUpCheckInfo)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gotd/td/tg"
@@ -16,7 +17,7 @@ func getCommandName(u in.UpdateMessage) string {
 	if len(text) <= 0 || text[0] != '/' {
 		return ""
 	}
-	return strings.Split(text, " ")[0][1:]
+	return strings.Split(strings.Split(text, "\n")[0], " ")[0][1:]
 }
 
 func getCommandParams(u in.UpdateMessage) []string {
@@ -26,7 +27,7 @@ func getCommandParams(u in.UpdateMessage) []string {
 
 func getCommandLines(u in.UpdateMessage) []string {
 	text := u.Message.GetMessage()
-	return strings.Split(text, "\n\n")[1:]
+	return strings.Split(text, "\n-\n")[1:]
 }
 
 func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {
@@ -95,4 +96,25 @@ func isUserMod(u in.UpdateMessage) (bool, error) {
 		return false, fmt.Errorf("Error finding the user")
 	}
 	return user.Role == "mod", nil
+}
+
+func getIDFromParam(u in.UpdateMessage) (int, error) {
+	params := getCommandParams(u)
+	if len(params) != 1 { // only one parameter
+		if err := reactToMessage(u, "👎"); err != nil {
+			return 0, err
+		}
+		return 0, fmt.Errorf("Not one parameter")
+	}
+
+	// Get target ID
+	targetID, err := strconv.Atoi(params[0])
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return 0, err
+		}
+		return 0, err
+	}
+
+	return targetID, nil
 }

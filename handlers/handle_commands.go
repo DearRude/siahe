@@ -51,8 +51,18 @@ func handleCommands(u in.UpdateMessage) error {
 	}
 	if ok {
 		switch command {
-		case "promote": // TODO change later
-			return promoteCommand(u)
+		case "getUser":
+			return getUserCommand(u)
+		case "deleteUser":
+			return deleteUserCommand(u)
+		case "addPlace":
+			return addPlaceCommand(u)
+		case "getPlace":
+			return getPlaceCommand(u)
+		case "getPlaces":
+			return getPlacesCommand(u)
+		case "deletePlace":
+			return deletePlaceCommand(u)
 		}
 	}
 
@@ -71,7 +81,7 @@ func startCommand(u in.UpdateMessage) error {
 
 func signupCommand(u in.UpdateMessage) error {
 	var user database.User
-	if err := db.Model(&database.User{}).First(&user, u.PeerUser.UserID).Error; err != nil {
+	if err := db.First(&user, u.PeerUser.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// Accepted. Ask for first name
 			if err := reactToMessage(u, "👍"); err != nil {
@@ -122,7 +132,7 @@ func deleteAccountCommand(u in.UpdateMessage) error {
 
 func getAccountCommand(u in.UpdateMessage) error {
 	var user database.User
-	if err := db.Model(&database.User{}).First(&user, u.PeerUser.UserID).Error; err != nil {
+	if err := db.First(&user, u.PeerUser.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// User has no account
 			if err := reactToMessage(u, "👎"); err != nil {
@@ -177,20 +187,8 @@ func promoteMeCommand(u in.UpdateMessage) error {
 
 // parameters: userID
 func promoteCommand(u in.UpdateMessage) error {
-	params := getCommandParams(u)
-	if len(params) != 1 { // only one parameter
-		if err := reactToMessage(u, "👎"); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// Get target ID
-	targetID, err := strconv.Atoi(params[0])
+	targetID, err := getIDFromParam(u)
 	if err != nil {
-		if err := reactToMessage(u, "👎"); err != nil {
-			return err
-		}
 		return err
 	}
 
@@ -211,14 +209,10 @@ func promoteCommand(u in.UpdateMessage) error {
 
 // parameters: userID
 func demoteCommand(u in.UpdateMessage) error {
-	params := getCommandParams(u)
-	if len(params) != 1 { // only one parameter
-		if err := reactToMessage(u, "👎"); err != nil {
-			return err
-		}
-		return nil
+	targetID, err := getIDFromParam(u)
+	if err != nil {
+		return err
 	}
-	targetID := params[0]
 
 	res := db.Model(&database.User{}).Where("id = ?", targetID).Update("role", "user")
 	if err := res.Error; err != nil || res.RowsAffected <= 0 {
@@ -226,6 +220,183 @@ func demoteCommand(u in.UpdateMessage) error {
 			return err
 		}
 		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: userID
+func getUserCommand(u in.UpdateMessage) error {
+	targetID, err := getIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	var user database.User
+	if err := db.First(&user, targetID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// User has no account
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+			_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageUserHasNoAccount()...)
+			return err
+		} else {
+			return err
+		}
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintUser(user)...)
+	return err
+}
+
+// parameter: userID
+func deleteUserCommand(u in.UpdateMessage) error {
+	targetID, err := getIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Delete(&database.User{}, targetID)
+	if err := res.Error; err != nil {
+		return err
+	}
+
+	// No user found
+	if res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// line parameters: name, address, capacity
+func addPlaceCommand(u in.UpdateMessage) error {
+	params := getCommandLines(u)
+	if len(params) != 3 { // only three parameters
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAddPlaceHelp()...); err != nil {
+			return err
+		}
+
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAddPlaceExample()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	capacity, err := strconv.ParseUint(params[2], 10, 64)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	place := database.Place{
+		Name:     params[0],
+		Address:  params[1],
+		Capacity: uint(capacity),
+	}
+
+	res := db.Create(&place)
+	if err := res.Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePlaceAdded(place)...); err != nil {
+		return err
+	}
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: placeID
+func getPlaceCommand(u in.UpdateMessage) error {
+	targetID, err := getIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	var place database.Place
+	if err := db.First(&place, targetID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No place found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintPlace(place)...)
+	return err
+}
+
+func getPlacesCommand(u in.UpdateMessage) error {
+	var places []database.Place
+	if err := db.Find(&places).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No place found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintPlaces(places)...)
+	return err
+}
+
+// parameter: placeID
+func deletePlaceCommand(u in.UpdateMessage) error {
+	targetID, err := getIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Delete(&database.Place{}, targetID)
+	if err := res.Error; err != nil {
+		return err
+	}
+
+	// No place found
+	if res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {

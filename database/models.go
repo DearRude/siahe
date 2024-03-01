@@ -30,15 +30,15 @@ type User struct {
 }
 
 type Place struct {
-	ID       uint `gorm:"primaryKey"`
-	Name     string
+	ID       uint   `gorm:"primaryKey;autoIncrement"`
+	Name     string `gorm:"unique"`
 	Address  string
 	Capacity uint
 }
 
 type Event struct {
-	ID             uint `gorm:"primaryKey"`
-	Name           string
+	ID             uint   `gorm:"primaryKey;autoIncrement"`
+	Name           string `gorm:"unique"`
 	Description    string
 	Date           *time.Time
 	IsPaid         bool
