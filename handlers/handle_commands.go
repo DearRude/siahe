@@ -20,6 +20,10 @@ func handleCommands(u in.UpdateMessage) error {
 		return startCommand(u)
 	case "signup":
 		return signupCommand(u)
+	case "deleteAccount":
+		return deleteAccountCommand(u)
+	case "getAccount":
+		return getAccountCommand(u)
 	default:
 		return nil
 	}
@@ -38,7 +42,7 @@ func signupCommand(u in.UpdateMessage) error {
 		if err == gorm.ErrRecordNotFound {
 			// Accepted. Ask for first name
 			if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAskFirstName()...); err != nil {
-				return nil
+				return err
 			}
 			StateMap.Set(u.PeerUser.UserID, in.SignUpAskFirstName)
 			return nil
@@ -49,5 +53,39 @@ func signupCommand(u in.UpdateMessage) error {
 
 	// User is found. They can't sign up again
 	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageYouAlreadySignedUp(user.FirstName)...)
+	return err
+}
+
+func deleteAccountCommand(u in.UpdateMessage) error {
+	res := db.Delete(&database.User{}, u.PeerUser.UserID)
+	if err := res.Error; err != nil {
+		return err
+	}
+
+	// User does not have an account
+	if res.RowsAffected <= 0 {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageUserHasNoAccount()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAccountDeleted()...)
+	return err
+}
+
+func getAccountCommand(u in.UpdateMessage) error {
+	var user database.User
+	if err := db.Model(&database.User{}).First(&user, u.PeerUser.UserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// User has no account
+			_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageUserHasNoAccount()...)
+			return err
+		} else {
+			return err
+		}
+	}
+
+	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintUser(user)...)
 	return err
 }

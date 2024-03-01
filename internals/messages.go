@@ -17,6 +17,17 @@ func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {
 	}
 }
 
+func MessageUserHasNoAccount() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("شما دارای حساب نیستید."),
+	}
+}
+func MessageAccountDeleted() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("حساب شما حذف شد!"),
+	}
+}
+
 func MessageAskFirstName() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("لطفاً نام کوچک خود را به فارسی وارد کنید."),
