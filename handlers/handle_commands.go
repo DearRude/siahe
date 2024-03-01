@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"gorm.io/gorm"
+	"strconv"
 
 	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
@@ -15,6 +16,7 @@ func handleCommands(u in.UpdateMessage) error {
 
 	StateMap.Set(u.PeerUser.UserID, in.CommandState)
 
+	// Handle user commands
 	switch command {
 	case "start":
 		return startCommand(u)
@@ -26,9 +28,35 @@ func handleCommands(u in.UpdateMessage) error {
 		return getAccountCommand(u)
 	case "promoteMe":
 		return promoteMeCommand(u)
-	default:
-		return nil
 	}
+
+	// Handle mod commands
+	ok, err := isUserMod(u)
+	if err != nil {
+		return err
+	}
+	if ok {
+		switch command {
+		case "promote":
+			return promoteCommand(u)
+		case "demote":
+			return demoteCommand(u)
+		}
+	}
+
+	// Handle admin commands
+	ok, err = isUserAdmin(u)
+	if err != nil {
+		return err
+	}
+	if ok {
+		switch command {
+		case "promote": // TODO change later
+			return promoteCommand(u)
+		}
+	}
+
+	return nil
 }
 
 func startCommand(u in.UpdateMessage) error {
@@ -138,6 +166,66 @@ func promoteMeCommand(u in.UpdateMessage) error {
 			return err
 		}
 		return nil
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameters: userID
+func promoteCommand(u in.UpdateMessage) error {
+	params := getCommandParams(u)
+	if len(params) != 1 { // only one parameter
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Get target ID
+	targetID, err := strconv.Atoi(params[0])
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	res := db.Model(&database.User{}).Where("id = ?", targetID).Update("role", "admin")
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameters: userID
+func demoteCommand(u in.UpdateMessage) error {
+	params := getCommandParams(u)
+	if len(params) != 1 { // only one parameter
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
+	}
+	targetID := params[0]
+
+	res := db.Model(&database.User{}).Where("id = ?", targetID).Update("role", "user")
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {

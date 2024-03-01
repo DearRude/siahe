@@ -7,6 +7,7 @@ import (
 
 	"github.com/gotd/td/tg"
 
+	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
 )
 
@@ -76,4 +77,22 @@ func reactToMessage(u in.UpdateMessage, emoji string) error {
 		Emoticon: emoji,
 	})
 	return err
+}
+
+func isUserAdmin(u in.UpdateMessage) (bool, error) {
+	user := database.User{ID: u.PeerUser.UserID}
+	res := db.Select("role").First(&user)
+	if res.Error != nil || user.Role == "" {
+		return false, fmt.Errorf("Error finding the user")
+	}
+	return user.Role == "admin" || user.Role == "mod", nil
+}
+
+func isUserMod(u in.UpdateMessage) (bool, error) {
+	user := database.User{ID: u.PeerUser.UserID}
+	res := db.Select("role").First(&user)
+	if res.Error != nil || user.Role == "" {
+		return false, fmt.Errorf("Error finding the user")
+	}
+	return user.Role == "mod", nil
 }
