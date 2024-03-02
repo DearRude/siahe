@@ -98,7 +98,7 @@ func isUserMod(u in.UpdateMessage) (bool, error) {
 	return user.Role == "mod", nil
 }
 
-func getIDFromParam(u in.UpdateMessage) (int, error) {
+func parseIDFromParam(u in.UpdateMessage) (int, error) {
 	params := getCommandParams(u)
 	if len(params) != 1 { // only one parameter
 		if err := reactToMessage(u, "👎"); err != nil {
@@ -117,4 +117,15 @@ func getIDFromParam(u in.UpdateMessage) (int, error) {
 	}
 
 	return targetID, nil
+}
+
+func parseBoolFromText(text string) (bool, error) {
+	switch text {
+	case "بله":
+		return true, nil
+	case "خیر":
+		return false, nil
+	default:
+		return false, fmt.Errorf("could not parse bool from text: %s", text)
+	}
 }

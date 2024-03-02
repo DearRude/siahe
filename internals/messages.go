@@ -204,6 +204,31 @@ func MessageAddPlaceExample() []message.StyledTextOption {
 	}
 }
 
+func MessageAddEventeHelp() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("اطلاعات را با خط تیره - فاصله گذاری کنید. \n"),
+		styling.Plain("اطلاعات مربوط به «رویداد» عبارت‌اند از: "),
+		styling.Bold("نام، توضیحات، نیاز به هزینه؟، ماکسیمم خرید یکجا بلیط، آیدی مکان رویداد\n"),
+		styling.Plain("برای مثال: \n\n"),
+	}
+}
+
+func MessageAddEventExample() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("/addEvent"),
+		styling.Plain("\n-\n"),
+		styling.Plain("نشست نمایش‌نامه خوانی چهارصندوق"),
+		styling.Plain("\n-\n"),
+		styling.Plain("در این نشست به متن‌خوانی نمایش‌نامه چهارصندوق می‌پردازیم. شرکت در این نشست برای دانشجویان رایگان و آزاد است."),
+		styling.Plain("\n-\n"),
+		styling.Plain("بله"),
+		styling.Plain("\n-\n"),
+		styling.Plain("5"),
+		styling.Plain("\n-\n"),
+		styling.Plain("2"),
+	}
+}
+
 func ButtonYesNo() []tg.KeyboardButtonClass {
 	return []tg.KeyboardButtonClass{
 		markup.Callback("بله", []byte("yes")),
@@ -270,19 +295,6 @@ func ButtonAskPhone() tg.ReplyMarkupClass {
 }
 
 func MessagePrintUser(user db.User) []message.StyledTextOption {
-	boolToText := func(b bool) string {
-		if b {
-			return "بله"
-		}
-		return "خیر"
-	}
-
-	boolToGender := func(b bool) string {
-		if b {
-			return "مرد"
-		}
-		return "زن"
-	}
 
 	m := []message.StyledTextOption{
 		styling.Bold("کاربر با آیدی: "),
@@ -392,4 +404,67 @@ func MessagePlaceAdded(place db.Place) []message.StyledTextOption {
 	}
 
 	return append(m, MessagePrintPlace(place)...)
+}
+
+func MessagePrintEvent(event db.Event) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Bold("رویداد با آیدی: "),
+		styling.Code(fmt.Sprintf("%d", event.ID)),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام: "),
+		styling.Plain(event.Name),
+		styling.Plain("\n"), // newline
+		styling.Bold("توضیحات: "),
+		styling.Plain(event.Description),
+		styling.Plain("\n"), // newline
+		styling.Bold("نیاز به هزینه؟ "),
+		styling.Plain(boolToText(event.IsPaid)),
+		styling.Plain("\n"), // newline
+		styling.Bold("ماکسیمم خرید یک‌جا بلیط: "),
+		styling.Code(fmt.Sprintf("%d", event.MaxTicketBatch)),
+		styling.Plain("\n"), // newline
+		styling.Bold("آیدی مکان رویداد: "),
+		styling.Code(fmt.Sprintf("%d", event.PlaceID)),
+		styling.Plain("\n"), // newline
+		styling.Bold("فعال است؟ "),
+		styling.Plain(boolToText(event.IsActive)),
+	}
+}
+
+func MessagePrintEvents(events []db.Event) []message.StyledTextOption {
+	m := []message.StyledTextOption{
+		styling.Bold("رویدادهای ثبت شده: \n\n"),
+	}
+
+	for _, event := range events {
+		m = append(m, []styling.StyledTextOption{
+			styling.Code(fmt.Sprintf("%d", event.ID)),
+			styling.Plain(fmt.Sprintf(": %s\n", event.Name)),
+		}...)
+	}
+
+	return m
+}
+
+func MessageEventAdded(event db.Event) []message.StyledTextOption {
+	m := []message.StyledTextOption{
+		styling.Plain("رویداد زیر اضافه شد!"),
+		styling.Plain("\n\n"), // newline
+	}
+
+	return append(m, MessagePrintEvent(event)...)
+}
+
+func boolToText(b bool) string {
+	if b {
+		return "بله"
+	}
+	return "خیر"
+}
+
+func boolToGender(b bool) string {
+	if b {
+		return "مرد"
+	}
+	return "زن"
 }

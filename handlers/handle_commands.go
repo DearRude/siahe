@@ -63,6 +63,18 @@ func handleCommands(u in.UpdateMessage) error {
 			return getPlacesCommand(u)
 		case "deletePlace":
 			return deletePlaceCommand(u)
+		case "addEvent":
+			return addEventCommand(u)
+		case "getEvent":
+			return getEventCommand(u)
+		case "getEvents":
+			return getEventsCommand(u)
+		case "deleteEvent":
+			return deleteEventCommand(u)
+		case "activateEvent":
+			return activateEventCommand(u)
+		case "deactivateEvent":
+			return deactivateEventCommand(u)
 		}
 	}
 
@@ -187,7 +199,7 @@ func promoteMeCommand(u in.UpdateMessage) error {
 
 // parameters: userID
 func promoteCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -209,7 +221,7 @@ func promoteCommand(u in.UpdateMessage) error {
 
 // parameters: userID
 func demoteCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -231,7 +243,7 @@ func demoteCommand(u in.UpdateMessage) error {
 
 // parameter: userID
 func getUserCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -259,7 +271,7 @@ func getUserCommand(u in.UpdateMessage) error {
 
 // parameter: userID
 func deleteUserCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -335,7 +347,7 @@ func addPlaceCommand(u in.UpdateMessage) error {
 
 // parameter: placeID
 func getPlaceCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -343,13 +355,12 @@ func getPlaceCommand(u in.UpdateMessage) error {
 	var place database.Place
 	if err := db.First(&place, targetID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// No place found
+			// No event found
 			if err := reactToMessage(u, "👎"); err != nil {
 				return err
 			}
-		} else {
-			return err
 		}
+		return err
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {
@@ -381,7 +392,7 @@ func getPlacesCommand(u in.UpdateMessage) error {
 
 // parameter: placeID
 func deletePlaceCommand(u in.UpdateMessage) error {
-	targetID, err := getIDFromParam(u)
+	targetID, err := parseIDFromParam(u)
 	if err != nil {
 		return err
 	}
@@ -392,6 +403,201 @@ func deletePlaceCommand(u in.UpdateMessage) error {
 	}
 
 	// No place found
+	if res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// line parameters: name, description, isPaid, maxTicketBatch, placeID
+func addEventCommand(u in.UpdateMessage) error {
+	params := getCommandLines(u)
+	if len(params) != 5 { // only five parameters
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAddEventeHelp()...); err != nil {
+			return err
+		}
+
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageAddEventExample()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	isPaid, err := parseBoolFromText(params[2])
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	maxTicketBatch, err := strconv.ParseUint(params[3], 10, 64)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	placeID, err := strconv.ParseUint(params[4], 10, 64)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	// Check if place exists
+	var place database.Place
+	if err := db.First(&place, placeID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	event := database.Event{
+		Name:           params[0],
+		Description:    params[1],
+		MaxTicketBatch: uint(maxTicketBatch),
+		IsPaid:         isPaid,
+		PlaceID:        uint(placeID),
+		IsActive:       true, // An event is a active by default
+	}
+
+	res := db.Create(&event)
+	if err := res.Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageEventAdded(event)...); err != nil {
+		return err
+	}
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: eventID
+func getEventCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	var event database.Event
+	if err := db.First(&event, targetID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No event found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintEvent(event)...)
+	return err
+}
+
+// parameter: eventID
+func activateEventCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Model(&database.Event{}).Where("id = ?", targetID).Update("is_active", true)
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: eventID
+func deactivateEventCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Model(&database.Event{}).Where("id = ?", targetID).Update("is_active", false)
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getEventsCommand(u in.UpdateMessage) error {
+	var events []database.Event
+	if err := db.Find(&events).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No event found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintEvents(events)...)
+	return err
+}
+
+// parameter: eventID
+func deleteEventCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Delete(&database.Event{}, targetID)
+	if err := res.Error; err != nil {
+		return err
+	}
+
+	// No event found
 	if res.RowsAffected <= 0 {
 		if err := reactToMessage(u, "👎"); err != nil {
 			return err

@@ -40,11 +40,12 @@ type Event struct {
 	ID             uint   `gorm:"primaryKey;autoIncrement"`
 	Name           string `gorm:"unique"`
 	Description    string
-	Date           *time.Time
 	IsPaid         bool
 	MaxTicketBatch uint
 
 	PlaceID uint
+
+	IsActive bool
 }
 
 type Ticket struct {
