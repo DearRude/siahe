@@ -231,3 +231,25 @@ func signUpCheckInfo(u in.UpdateCallback) error {
 
 	return nil
 }
+
+func getTicketInit(u in.UpdateCallback) error {
+	isTrue, err := getYesNoButtonAnswer(u)
+	if err != nil {
+		return err
+	}
+
+	// Cancel getTicket
+	if !isTrue {
+		if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageGetTicketCancelled()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageAskTicketCount()...); err != nil {
+		return err
+	}
+	StateMap.Set(u.PeerUser.UserID, in.GetTicketCount)
+
+	return nil
+}

@@ -15,6 +15,7 @@ import (
 var (
 	StateMap = in.NewUserStateMap()
 	UserMap  = in.NewUserDataMap()
+	EventMap = in.NewEventDataMap()
 
 	sender        *message.Sender
 	client        *tg.Client
@@ -62,22 +63,22 @@ func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage
 	return nil
 }
 
-func HandleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallbackQuery) error {
+func HandleCallbacks(ctx context.Context, ent tg.Entities, update *tg.UpdateBotCallbackQuery) error {
 	// Get sender user
-	user, err := getSenderUser(u.GetPeer(), ent)
+	user, err := getSenderUser(update.GetPeer(), ent)
 	if err != nil {
 		return err
 	}
 
 	_, err = client.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{
-		QueryID: u.QueryID,
+		QueryID: update.QueryID,
 		Message: "حله!",
 	})
 
-	updates := in.UpdateCallback{
+	u := in.UpdateCallback{
 		Ctx:      ctx,
 		Ent:      ent,
-		Ubc:      u,
+		Ubc:      update,
 		PeerUser: user.AsInputPeer(),
 	}
 
@@ -85,23 +86,25 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, u *tg.UpdateBotCallba
 	if hasState {
 		switch state {
 		case in.SignUpAskGender:
-			return signUpAskGender(updates)
+			return signUpAskGender(u)
 		case in.SignUpAskIsFumStudent:
-			return signUpAskIsFumStudent(updates)
+			return signUpAskIsFumStudent(u)
 		case in.SignUpAskIsStudent:
-			return signUpAskIsStudent(updates)
+			return signUpAskIsStudent(u)
 		case in.SignUpAskIsMashhadStudent:
-			return signUpAskIsMashhadStudent(updates)
+			return signUpAskIsMashhadStudent(u)
 		case in.SignUpAskIsGraduate:
-			return signUpAskIsGraduate(updates)
+			return signUpAskIsGraduate(u)
 		case in.SignUpAskIsStudentRelative:
-			return signUpAskIsStudentRelative(updates)
+			return signUpAskIsStudentRelative(u)
 		case in.SignUpAskFumFaculty:
-			return signUpAskFumFaculty(updates)
+			return signUpAskFumFaculty(u)
 		case in.SignUpAskIsMastPhd:
-			return signUpAskMastPhd(updates)
+			return signUpAskMastPhd(u)
 		case in.SignUpCheckInfo:
-			return signUpCheckInfo(updates)
+			return signUpCheckInfo(u)
+		case in.GetTicketInit:
+			return getTicketInit(u)
 		default:
 			return nil
 		}

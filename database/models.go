@@ -44,6 +44,7 @@ type Event struct {
 	MaxTicketBatch uint
 
 	PlaceID uint
+	Place   Place `gorm:"foreignKey:PlaceID"`
 
 	IsActive bool
 }
@@ -51,8 +52,11 @@ type Event struct {
 type Ticket struct {
 	ID           uint `gorm:"primaryKey"`
 	PurchaseTime time.Time
-	UserCount    uint
+	Status       string
 
-	UserID  int64
+	UserID int64
+	User   User `gorm:"foreignKey:UserID"`
+
 	EventID uint
+	Event   Event `gorm:"foreignKey:EventID"`
 }

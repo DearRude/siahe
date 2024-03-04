@@ -19,9 +19,11 @@ func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {
 
 func MessageUserHasNoAccount() []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("شما دارای حساب نیستید."),
+		styling.Plain("شما دارای حساب نیستید.\n"),
+		styling.Plain("می‌توانید با دستور /signup در ربات ثبت‌نام کنید."),
 	}
 }
+
 func MessageAccountDeleted() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("حساب شما حذف شد!"),
@@ -453,6 +455,94 @@ func MessageEventAdded(event db.Event) []message.StyledTextOption {
 	}
 
 	return append(m, MessagePrintEvent(event)...)
+}
+
+func MessageInvalidTicketLink() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("رویداد مورد نظر برای تهیه بلیط یافت نشد."),
+	}
+}
+
+func MessageEventIsDeactive() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("رویداد مورد نظر منقضی شده یا فعال نیست."),
+	}
+}
+
+func MessageMaxTicketIsReached() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("شما بلیط دیگری نمی‌توانید تهیه کنید."),
+	}
+}
+
+func MessageWantToGetTicket(event db.Event, place db.Place, ticketRemain int) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("آیا در رویداد زیر می‌خواهید شرکت کنید؟\n\n"),
+		styling.Bold("نام: "),
+		styling.Plain(event.Name),
+		styling.Plain("\n"), // newline
+		styling.Bold("توضیحات: "),
+		styling.Plain(event.Description),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام مکان: "),
+		styling.Plain(place.Name),
+		styling.Plain("\n"), // newline
+		styling.Bold("آدرس: "),
+		styling.Plain(place.Address),
+		styling.Plain("\n\n"), // newline
+		styling.Plain("شما حداکثر "),
+		styling.Code(fmt.Sprintf("%d", ticketRemain)),
+		styling.Plain(" بلیط می‌توانید تهیه کنید."),
+	}
+}
+
+func MessageGetTicketCancelled() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("فرایند تهیه بلیط شما لغو شد."),
+	}
+}
+
+func MessageAskTicketCount() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("لطفاً تعداد بلیط‌های مورد خرید خود را به اعداد لاتین وارد کنید."),
+	}
+}
+
+func MessageEventIsFull() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("ظرفیت رویداد مورد نظر تکمیل شده است."),
+	}
+}
+
+func MessageTicketCountIsNotCorrect() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("تعداد بلیط‌ها را  به صورت صحیح و با اعداد لاتین وارد کنید."),
+	}
+}
+
+func MessageTicketsBought(tickets []uint) []message.StyledTextOption {
+	m := []message.StyledTextOption{
+		styling.Plain("ثبت‌نام شما با موفقیت انجام شد. بلیط(های) شما:\n"),
+	}
+
+	for _, ticket := range tickets {
+		m = append(m, []message.StyledTextOption{
+			styling.Plain("- "),
+			styling.Code(fmt.Sprintf("%d\n", ticket)),
+		}...)
+	}
+
+	return m
+}
+
+func MessageTicketCountRange(max uint) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("تعداد بلیط‌های وارد شده باید بین "),
+		styling.Code("1"),
+		styling.Plain(" تا "),
+		styling.Code(fmt.Sprintf("%d", max)),
+		styling.Plain(" باشد."),
+	}
 }
 
 func boolToText(b bool) string {

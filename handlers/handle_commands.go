@@ -3,6 +3,7 @@ package handlers
 import (
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 
 	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
@@ -88,6 +89,17 @@ func startCommand(u in.UpdateMessage) error {
 	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageStart(u.PeerUser.UserID)...); err != nil {
 		return err
 	}
+
+	// Check deeplink coomands
+	params := getCommandParams(u)
+	if len(params) == 1 { // deeplink initiated
+		command := strings.Split(params[0], "_")[0]
+		switch command {
+		case "getTicket":
+			return getTicketDeepLink(u)
+		}
+	}
+
 	return nil
 }
 
@@ -152,9 +164,8 @@ func getAccountCommand(u in.UpdateMessage) error {
 			}
 			_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageUserHasNoAccount()...)
 			return err
-		} else {
-			return err
 		}
+		return err
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {

@@ -1,6 +1,10 @@
 package handlers
 
 import (
+	"math/rand"
+	"strconv"
+	"time"
+
 	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
 )
@@ -26,6 +30,8 @@ func handleMessageStates(u in.UpdateMessage) error {
 		return signUpAskUniversityName(u)
 	case in.SignUpAskEntraceYear:
 		return signUpAskEntranceYear(u)
+	case in.GetTicketCount:
+		return getTicketCount(u)
 	default:
 		return nil
 	}
@@ -226,4 +232,84 @@ func signUpAskEntranceYear(u in.UpdateMessage) error {
 	StateMap.Set(u.PeerUser.UserID, in.SignUpAskIsMastPhd)
 
 	return nil
+}
+
+func getTicketCount(u in.UpdateMessage) error {
+	// Input is not number
+	count, err := strconv.ParseUint(u.Message.Message, 10, 64)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketCountIsNotCorrect()...); err != nil {
+			return err
+		}
+		return err
+	}
+
+	event, _ := EventMap.Get(u.PeerUser.UserID)
+	// Number has invalid range
+	if count < 1 || uint(count) > event.MaxTicketBatch {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketCountRange(event.MaxTicketBatch)...); err != nil {
+			return err
+		}
+		return err
+	}
+
+	// React ok
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	if !event.IsPaid {
+		tickets, err := generateTicket(u, int(count), "completed")
+		if err != nil {
+			return err
+		}
+
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketsBought(tickets)...); err != nil {
+			return err
+		}
+
+		StateMap.Set(u.PeerUser.UserID, in.CommandState)
+		return nil
+	}
+
+	// Event is paid
+	if _, err := generateTicket(u, int(count), "reserved"); err != nil {
+		return err
+	}
+	// TODO: paid event
+
+	return nil
+}
+
+func generateTicket(u in.UpdateMessage, count int, status string) ([]uint, error) {
+	event, _ := EventMap.Get(u.PeerUser.UserID)
+	var ticketIDs []uint
+
+	for i := 0; i < count; i++ {
+		id := uint(rand.Intn(9000) + 1000) // generate ID between 1000 and 9999
+		for db.First(&database.Ticket{}, id).RowsAffected != 0 {
+			id = uint(rand.Intn(9000) + 1000)
+		}
+
+		ticket := database.Ticket{
+			ID:           id,
+			PurchaseTime: time.Now().UTC(),
+			Status:       status,
+			UserID:       u.PeerUser.UserID,
+			EventID:      event.ID,
+		}
+
+		if err := db.Create(&ticket).Error; err != nil {
+			return nil, err
+		}
+		ticketIDs = append(ticketIDs, id)
+	}
+
+	return ticketIDs, nil
 }
