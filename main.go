@@ -29,7 +29,9 @@ func main() {
 	if err != nil {
 		panic("failed to initialize logger: " + err.Error())
 	}
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		_ = logger.Sync()
+	}()
 	sugar := logger.Sugar()
 
 	// Init database

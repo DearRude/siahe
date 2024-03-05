@@ -76,7 +76,7 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, update *tg.UpdateBotC
 	}
 
 	// Construct update callback
-	user, _ := ent.Users[update.UserID]
+	user := ent.Users[update.UserID]
 	u := in.UpdateCallback{
 		Ctx:      ctx,
 		Ent:      ent,

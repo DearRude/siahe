@@ -1,6 +1,6 @@
 module github.com/DearRude/fumTheatreBot
 
-go 1.21.6
+go 1.21
 
 require (
 	github.com/glebarez/sqlite v1.10.0
