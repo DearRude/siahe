@@ -11,16 +11,18 @@ import (
 
 type Config struct {
 	// Requireds
-	AppID    int    //  Get from https://my.telegram.org/apps
-	AppHash  string //  Get from https://my.telegram.org/apps
-	BotToken string //  Get from https://t.me/BotFather
+	AppID            int    //  Get from https://my.telegram.org/apps
+	AppHash          string //  Get from https://my.telegram.org/apps
+	BotToken         string //  Get from https://t.me/BotFather
+	AdminPassword    string
+	VarificationChat int
+	BackupChat       int
 
 	// Optionals
-	SqlitePath    string
-	SessionPath   string
-	RateLimit     time.Duration
-	RateBurst     int
-	AdminPassword string
+	SqlitePath  string
+	SessionPath string
+	RateLimit   time.Duration
+	RateBurst   int
 }
 
 func GenConfig() Config {
@@ -34,9 +36,12 @@ func GenConfig() Config {
 		sqlitePath  = fs.String("sqlitePath", "./assets/sqlite.db", "relative or absloute path of sqlite db")
 		sessionPath = fs.String("sessionPath", "./assets/session.json", "relative or absloute path of session auth file")
 
-		rateLimit     = fs.Duration("rateLimit", time.Millisecond*100, "limit maximum rpc call rate")
-		rateBurst     = fs.Int("rateBurst", 3, "limit rpc call burst")
-		adminPassword = fs.String("adminPassword", "", "top-admin password")
+		rateLimit = fs.Duration("rateLimit", time.Millisecond*100, "limit maximum rpc call rate")
+		rateBurst = fs.Int("rateBurst", 3, "limit rpc call burst")
+
+		adminPassword    = fs.String("adminPassword", "", "top-admin password")
+		varificationChat = fs.Int("varificationChat", 0, "chatID where varification of paid tickets will be sent to")
+		backupChat       = fs.Int("backupChat", 0, "chatID where backup file of db will be sent periodiacally")
 	)
 
 	if _, err := os.Stat(".env"); os.IsNotExist(err) {
@@ -65,6 +70,8 @@ func GenConfig() Config {
 		RateLimit: *rateLimit,
 		RateBurst: *rateBurst,
 
-		AdminPassword: *adminPassword,
+		AdminPassword:    *adminPassword,
+		VarificationChat: *varificationChat,
+		BackupChat:       *backupChat,
 	}
 }

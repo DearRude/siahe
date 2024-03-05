@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"math/rand"
 	"strconv"
-	"time"
 
 	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
@@ -32,6 +30,8 @@ func handleMessageStates(u in.UpdateMessage) error {
 		return signUpAskEntranceYear(u)
 	case in.GetTicketCount:
 		return getTicketCount(u)
+	case in.GetTicketPayment:
+		return getTicketPayment(u)
 	default:
 		return nil
 	}
@@ -282,34 +282,44 @@ func getTicketCount(u in.UpdateMessage) error {
 	if _, err := generateTicket(u, int(count), "reserved"); err != nil {
 		return err
 	}
-	// TODO: paid event
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketSendPayment(event)...); err != nil {
+		return err
+	}
+	StateMap.Set(u.PeerUser.UserID, in.GetTicketPayment)
 
+	event.MaxTicketBatch = uint(count)
+	EventMap.Set(u.PeerUser.UserID, event)
 	return nil
 }
 
-func generateTicket(u in.UpdateMessage, count int, status string) ([]uint, error) {
-	event, _ := EventMap.Get(u.PeerUser.UserID)
-	var ticketIDs []uint
-
-	for i := 0; i < count; i++ {
-		id := uint(rand.Intn(9000) + 1000) // generate ID between 1000 and 9999
-		for db.First(&database.Ticket{}, id).RowsAffected != 0 {
-			id = uint(rand.Intn(9000) + 1000)
+func getTicketPayment(u in.UpdateMessage) error {
+	// No photo media
+	photoInput, err := getPhotoFromMedia(u)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
 		}
-
-		ticket := database.Ticket{
-			ID:           id,
-			PurchaseTime: time.Now().UTC(),
-			Status:       status,
-			UserID:       u.PeerUser.UserID,
-			EventID:      event.ID,
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketPaymentIncorrect()...); err != nil {
+			return err
 		}
-
-		if err := db.Create(&ticket).Error; err != nil {
-			return nil, err
-		}
-		ticketIDs = append(ticketIDs, id)
+		return err
 	}
 
-	return ticketIDs, nil
+	// Varification sent to chat
+	event, _ := EventMap.Get(u.PeerUser.UserID)
+	if _, err := sender.To(varificationChat).Row(in.ButtonYesNo()...).Photo(u.Ctx, photoInput, in.MessagePaymentVarification(event, u.PeerUser.UserID, u.PeerUser.AccessHash)...); err != nil {
+		return err
+	}
+
+	// Sent to user
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketIsBeingVarified()...); err != nil {
+		return err
+	}
+
+	StateMap.Set(u.PeerUser.UserID, in.CommandState)
+	return nil
+
 }

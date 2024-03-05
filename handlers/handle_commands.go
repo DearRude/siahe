@@ -16,6 +16,8 @@ func handleCommands(u in.UpdateMessage) error {
 	}
 
 	StateMap.Set(u.PeerUser.UserID, in.CommandState)
+	UserMap.Delete(u.PeerUser.UserID)
+	EventMap.Delete(u.PeerUser.UserID)
 
 	// Handle user commands
 	switch command {

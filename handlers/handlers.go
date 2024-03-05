@@ -17,17 +17,19 @@ var (
 	UserMap  = in.NewUserDataMap()
 	EventMap = in.NewEventDataMap()
 
-	sender        *message.Sender
-	client        *tg.Client
-	db            *gorm.DB
-	adminPassword string
+	sender           *message.Sender
+	client           *tg.Client
+	db               *gorm.DB
+	adminPassword    string
+	varificationChat *tg.InputPeerChat
 )
 
-func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, adminPass string) {
+func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, adminPass string, varifChat int) {
 	client = tgClient
 	sender = messageSender
 	db = database
 	adminPassword = adminPass
+	varificationChat = &tg.InputPeerChat{ChatID: int64(varifChat)}
 }
 
 func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {
@@ -64,17 +66,17 @@ func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage
 }
 
 func HandleCallbacks(ctx context.Context, ent tg.Entities, update *tg.UpdateBotCallbackQuery) error {
-	// Get sender user
-	user, err := getSenderUser(update.GetPeer(), ent)
+	// Answer read
+	_, err := client.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{
+		QueryID: update.QueryID,
+		Message: "حله!",
+	})
 	if err != nil {
 		return err
 	}
 
-	_, err = client.MessagesSetBotCallbackAnswer(ctx, &tg.MessagesSetBotCallbackAnswerRequest{
-		QueryID: update.QueryID,
-		Message: "حله!",
-	})
-
+	// Construct update callback
+	user, _ := ent.Users[update.UserID]
 	u := in.UpdateCallback{
 		Ctx:      ctx,
 		Ent:      ent,
@@ -82,6 +84,13 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, update *tg.UpdateBotC
 		PeerUser: user.AsInputPeer(),
 	}
 
+	// Query from varification chat
+	peerChat, isChat := update.GetPeer().(*tg.PeerChat)
+	if isChat && (peerChat.GetChatID() == varificationChat.GetChatID()) {
+		return varificationChatResponse(u)
+	}
+
+	// Query from user
 	state, hasState := StateMap.Get(user.GetID())
 	if hasState {
 		switch state {
@@ -105,8 +114,6 @@ func HandleCallbacks(ctx context.Context, ent tg.Entities, update *tg.UpdateBotC
 			return signUpCheckInfo(u)
 		case in.GetTicketInit:
 			return getTicketInit(u)
-		default:
-			return nil
 		}
 	}
 	return nil

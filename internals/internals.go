@@ -31,6 +31,7 @@ const (
 	SignUpCheckInfo
 	GetTicketInit
 	GetTicketCount
+	GetTicketPayment
 )
 
 type UpdateMessage struct {

@@ -545,6 +545,47 @@ func MessageTicketCountRange(max uint) []message.StyledTextOption {
 	}
 }
 
+func MessageTicketAlreadyReserving() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("درخواست قبلی شما برای دریافت بلیط کامل نشده است"),
+	}
+}
+
+func MessageTicketIsBeingVarified() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("درخواست شما برای دریافت بلیط توسط ادمین در حال بررسی است. نتیجه آن به شما ارسال می‌شود."),
+	}
+}
+
+func MessageTicketNotAccepted() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("درخواست شما برای تهیه بلیط تایید نشد."),
+	}
+}
+
+func MessageTicketSendPayment(event db.Event) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("با توجه به توضیحات رویداد و تعداد بلیط‌های خریداری شده، اطلاعات واریز خود را به صورت "),
+		styling.Bold("عکس (اسکرین شات) "),
+		styling.Plain("ارسال کنید.\n\n"),
+		styling.Plain(event.Description),
+	}
+}
+
+func MessageTicketPaymentIncorrect() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("لطفاً عکس واریزی خود را به صورت صحیح وارد کنید."),
+	}
+}
+
+func MessagePaymentVarification(event db.Event, userId, accessHash int64) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Code(fmt.Sprintf("%d %d %d\n\n", event.ID, userId, accessHash)),
+		styling.Plain(fmt.Sprintf("نام رویداد: %s\n", event.Name)),
+		styling.Plain(fmt.Sprintf("تعداد بلیط: %d\n", event.MaxTicketBatch)),
+	}
+}
+
 func boolToText(b bool) string {
 	if b {
 		return "بله"

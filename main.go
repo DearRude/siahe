@@ -69,7 +69,7 @@ func main() {
 
 		// Init handlers
 		api := tg.NewClient(client)
-		handlers.InitHandlers(database.Db, api, message.NewSender(api), c.AdminPassword)
+		handlers.InitHandlers(database.Db, api, message.NewSender(api), c.AdminPassword, c.VarificationChat)
 
 		// Setting up handler for incoming message.
 		dispatcher.OnNewMessage(handlers.HandleNewMessage)

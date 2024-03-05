@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/DearRude/fumTheatreBot/database"
 	in "github.com/DearRude/fumTheatreBot/internals"
 )
 
@@ -250,6 +251,57 @@ func getTicketInit(u in.UpdateCallback) error {
 		return err
 	}
 	StateMap.Set(u.PeerUser.UserID, in.GetTicketCount)
+
+	return nil
+}
+
+func varificationChatResponse(u in.UpdateCallback) error {
+	// Check if user is admin
+	isAdmin, err := isCallbackUserAdmin(u)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return nil
+	}
+
+	// Get eventID and userID
+	peer, eventID, err := getUserEventIDFromVarification(u)
+	if err != nil {
+		return err
+	}
+	condition := db.Where("event_id = ? AND user_id = ? AND status = ?", eventID, peer.UserID, "reserved")
+
+	// Check button
+	accept, err := getYesNoButtonAnswer(u)
+	if err != nil {
+		return err
+	}
+
+	if accept {
+		var tickets []uint
+		if err := db.Model(&database.Ticket{}).Where("event_id = ? AND user_id = ? AND status = ?", eventID, peer.UserID, "reserved").Pluck("id", &tickets).Error; err != nil {
+			return err
+		}
+		if err := condition.Model(&database.Ticket{}).Update("status", "completed").Error; err != nil {
+			return err
+		}
+		if _, err := sender.To(peer).StyledText(u.Ctx, in.MessageTicketsBought(tickets)...); err != nil {
+			return err
+		}
+	} else {
+		if err := condition.Delete(&database.Ticket{}).Error; err != nil {
+			return err
+		}
+		if _, err := sender.To(peer).StyledText(u.Ctx, in.MessageTicketNotAccepted()...); err != nil {
+			return err
+		}
+	}
+
+	// Delete the message
+	if err := deleteMessage(u); err != nil {
+		return err
+	}
 
 	return nil
 }

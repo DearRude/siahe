@@ -50,6 +50,25 @@ func getTicketDeepLink(u in.UpdateMessage) error {
 		return err
 	}
 
+	// Check user has already reserved request
+	var resereved int64
+	if err := db.Model(&database.Ticket{}).Where("user_id = ? AND event_id = ? AND status = ?", u.PeerUser.UserID, event.ID, "reserved").
+		Count(&resereved).Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+	if resereved > 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketAlreadyReserving()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	// Check event being active
 	if !event.IsActive {
 		if err := reactToMessage(u, "👎"); err != nil {
