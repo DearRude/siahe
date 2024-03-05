@@ -9,7 +9,7 @@ import (
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
 
-	in "github.com/DearRude/fumTheatreBot/internals"
+	in "github.com/DearRude/fumCommunityBot/internals"
 )
 
 var (

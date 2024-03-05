@@ -1,4 +1,4 @@
-module github.com/DearRude/fumTheatreBot
+module github.com/DearRude/fumCommunityBot
 
 go 1.21
 

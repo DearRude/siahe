@@ -10,8 +10,8 @@ import (
 
 	"github.com/gotd/td/tg"
 
-	"github.com/DearRude/fumTheatreBot/database"
-	in "github.com/DearRude/fumTheatreBot/internals"
+	"github.com/DearRude/fumCommunityBot/database"
+	in "github.com/DearRude/fumCommunityBot/internals"
 )
 
 func getCommandName(u in.UpdateMessage) string {

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/DearRude/fumTheatreBot/database"
-	in "github.com/DearRude/fumTheatreBot/internals"
+	"github.com/DearRude/fumCommunityBot/database"
+	in "github.com/DearRude/fumCommunityBot/internals"
 )
 
 func signUpAskGender(u in.UpdateCallback) error {
