@@ -54,6 +54,9 @@ services:
         BOTTOKEN: -
         ADMINPASSWORD: -
         VARIFICATIONCHAT: -
+        BACKUPCHAT: -
+        SQLITEPATH: "/home/nonroot/assets/db.sqlite"
+        SESSIONPATH: "/home/nonroot/assets/session.json"
 
 #+end_src
 
