@@ -1,4 +1,4 @@
-module github.com/DearRude/fumCommunityBot
+module github.com/DearRude/siahe
 
 go 1.21
 

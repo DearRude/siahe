@@ -8,7 +8,7 @@ import (
 	"github.com/gotd/td/telegram/message/styling"
 	"github.com/gotd/td/tg"
 
-	db "github.com/DearRude/fumCommunityBot/database"
+	db "github.com/DearRude/siahe/database"
 )
 
 func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {

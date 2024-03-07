@@ -1,6 +1,6 @@
-#+title: fumCommunityBot
+#+title: siahe
 
-=fumCommunityBot= is designed to help university clubs sell tickets for their events through the Telegram messaging platform. The bot provides a seamless ticket purchasing experience for users, allowing them to easily browse available events, select tickets, and sign up directly within the Telegram app.
+=siahe= is designed to help university clubs sell tickets for their events through the Telegram messaging platform. The bot provides a seamless ticket purchasing experience for users, allowing them to easily browse available events, select tickets, and sign up directly within the Telegram app.
 
 ** Build
 1. Have the latest version of =go= installed in you path.
@@ -11,7 +11,7 @@ go build .
 #+end_src
 
 ** Run
-=fumCommunityBot= inputs a set of configuration entries. This entries can either be passed by environment variables, argument flags or =.env= file. To see the full list of flags either do =fumCommunityBot --help= or check out [file:config.go] directly.
+=siahe= inputs a set of configuration entries. This entries can either be passed by environment variables, argument flags or =.env= file. To see the full list of flags either do =siahe --help= or check out [file:config.go] directly.
 
 Here is an example usage of an =.env= file.
 Generate the env file.
@@ -24,37 +24,36 @@ $EDITOR .env
 #+end_src
 Run the program.
 #+begin_src bash
-fumCommunityBot
+siahe
 #+end_src
 
 *** Run by Docker
-=fumCommunityBot= [[https://github.com/TopSelectOrg/toucanet/pkgs/container/toucanet][images]] are built upon each commit on Github container registry (ghcr) with =latest= tag.
+=siahe= [[https://github.com/TopSelectOrg/toucanet/pkgs/container/toucanet][images]] are built upon each commit on Github container registry (ghcr) with =latest= tag.
 
 Authorize to GHCR by [[https://github.com/settings/tokens][making a PAT]] that has =read:packages= permission. ([[https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic][info]])
 
-Make fumCommunityBot assets directory and grant nonroot permission to it.
+Make siahe assets directory and grant nonroot permission to it.
 #+begin_src bash
-mkdir fumCommunityBot_assets
-sudo chown 65532 fumCommunityBot_assets
-sudo chmod a+w fumCommunityBot_assets
+mkdir siahe_assets
+sudo chown 65532 siahe_assets
+sudo chmod a+w siahe_assets
 #+end_src
 
 Generate the following =docker-compose.yml= file.
 #+begin_src yaml
 version: '3'
 services:
-    fumCommunityBot:
-    image: ghcr.io/dearrude/fumCommunityBot:latest
-    container_name: fumCommunityBot
+    siahe:
+    image: ghcr.io/dearrude/siahe:latest
+    container_name: siahe
     volumes:
-        - ./fumCommunityBot_assets:/home/nonroot/assets
+        - ./siahe_assets:/home/nonroot/assets
     environment:
         APPID: -
         APPHASH: -
         BOTTOKEN: -
         ADMINPASSWORD: -
         VARIFICATIONCHAT: -
-        BACKUPCHAT: -
 
 #+end_src
 

@@ -3,7 +3,7 @@ package handlers
 import (
 	"regexp"
 
-	in "github.com/DearRude/fumCommunityBot/internals"
+	in "github.com/DearRude/siahe/internals"
 )
 
 func IsStringPersian(text string) bool {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gotd/td/tg"
 
-	db "github.com/DearRude/fumCommunityBot/database"
+	db "github.com/DearRude/siahe/database"
 )
 
 type UserState uint

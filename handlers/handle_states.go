@@ -3,8 +3,8 @@ package handlers
 import (
 	"strconv"
 
-	"github.com/DearRude/fumCommunityBot/database"
-	in "github.com/DearRude/fumCommunityBot/internals"
+	"github.com/DearRude/siahe/database"
+	in "github.com/DearRude/siahe/internals"
 )
 
 func handleMessageStates(u in.UpdateMessage) error {

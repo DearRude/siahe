@@ -27,7 +27,7 @@ type Config struct {
 
 func GenConfig() Config {
 	log.Println("Read configurations.")
-	fs := flag.NewFlagSet("fumCommunityBot", flag.ContinueOnError)
+	fs := flag.NewFlagSet("siahe", flag.ContinueOnError)
 	var (
 		appId    = fs.Int("appId", 0, "AppID in Telegram API")
 		appHash  = fs.String("appHash", "", "AppHash in Telegram API")

@@ -14,8 +14,8 @@ import (
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
 
-	db "github.com/DearRude/fumCommunityBot/database"
-	"github.com/DearRude/fumCommunityBot/handlers"
+	db "github.com/DearRude/siahe/database"
+	"github.com/DearRude/siahe/handlers"
 )
 
 func main() {
