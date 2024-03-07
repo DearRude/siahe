@@ -83,13 +83,15 @@ func main() {
 		ticker := time.NewTicker(24 * time.Hour)
 		defer ticker.Stop()
 
-		backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath)
-		for {
-			select {
-			case <-ticker.C:
-				backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath)
+		if err := backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath); err != nil {
+			sugar.Errorf("error backup database: %w", err)
+		}
+		for range ticker.C {
+			if err := backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath); err != nil {
+				sugar.Errorf("error backup database: %w", err)
 			}
 		}
+		return nil
 	}); err != nil {
 		sugar.Fatalf("Error running client: %w", err)
 	}
