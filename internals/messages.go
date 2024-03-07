@@ -20,7 +20,7 @@ func MessageYouAlreadySignedUp(name string) []message.StyledTextOption {
 func MessageUserHasNoAccount() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("شما دارای حساب نیستید.\n"),
-		styling.Plain("می‌توانید با دستور /signup در ربات ثبت‌نام کنید."),
+		styling.Plain("می‌توانید با دستور /add_account در ربات ثبت‌نام کنید."),
 	}
 }
 
@@ -339,7 +339,7 @@ func MessagePrintUser(user db.User) []message.StyledTextOption {
 			styling.Code(user.EntranceYear),
 			styling.Plain("\n"), // newline
 			styling.Bold("دانشجوی تحصیلات تکمیلی؟ "),
-			styling.Plain(boolToText(user.IsMashhadStudent)),
+			styling.Plain(boolToText(user.IsMastPhd)),
 			styling.Plain("\n"), // newline
 			styling.Bold("رشته تحصیلی: "),
 			styling.Plain(user.StudentMajor),

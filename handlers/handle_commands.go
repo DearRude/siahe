@@ -103,7 +103,7 @@ func startCommand(u in.UpdateMessage) error {
 	if len(params) == 1 { // deeplink initiated
 		command := strings.Split(params[0], "_")[0]
 		switch command {
-		case "get_ticket":
+		case "getTicket":
 			return getTicketDeepLink(u)
 		}
 	}
