@@ -23,13 +23,13 @@ func handleCommands(u in.UpdateMessage) error {
 	switch command {
 	case "start":
 		return startCommand(u)
-	case "signup":
-		return signupCommand(u)
-	case "deleteAccount":
+	case "add_account":
+		return addAccountCommand(u)
+	case "delete_account":
 		return deleteAccountCommand(u)
-	case "getAccount":
+	case "get_account":
 		return getAccountCommand(u)
-	case "promoteMe":
+	case "promote_me":
 		return promoteMeCommand(u)
 	}
 
@@ -54,35 +54,35 @@ func handleCommands(u in.UpdateMessage) error {
 	}
 	if ok {
 		switch command {
-		case "getUser":
+		case "get_user":
 			return getUserCommand(u)
-		case "deleteUser":
+		case "delete_user":
 			return deleteUserCommand(u)
-		case "addPlace":
+		case "add_place":
 			return addPlaceCommand(u)
-		case "getPlace":
+		case "get_place":
 			return getPlaceCommand(u)
-		case "getPlaces":
+		case "get_places":
 			return getPlacesCommand(u)
-		case "deletePlace":
+		case "delete_place":
 			return deletePlaceCommand(u)
-		case "addEvent":
+		case "add_event":
 			return addEventCommand(u)
-		case "getEvent":
+		case "get_event":
 			return getEventCommand(u)
-		case "getEvents":
+		case "get_events":
 			return getEventsCommand(u)
-		case "deleteEvent":
+		case "delete_event":
 			return deleteEventCommand(u)
-		case "activateEvent":
+		case "activate_event":
 			return activateEventCommand(u)
-		case "deactivateEvent":
+		case "deactivate_event":
 			return deactivateEventCommand(u)
-		case "getTicket":
+		case "get_ticket":
 			return getTicketCommand(u)
-		case "attendTicket":
+		case "attend_ticket":
 			return attendTicketCommand(u)
-		case "unattendTicket":
+		case "unattend_ticket":
 			return unattendTicketCommand(u)
 		}
 	}
@@ -103,7 +103,7 @@ func startCommand(u in.UpdateMessage) error {
 	if len(params) == 1 { // deeplink initiated
 		command := strings.Split(params[0], "_")[0]
 		switch command {
-		case "getTicket":
+		case "get_ticket":
 			return getTicketDeepLink(u)
 		}
 	}
@@ -111,7 +111,7 @@ func startCommand(u in.UpdateMessage) error {
 	return nil
 }
 
-func signupCommand(u in.UpdateMessage) error {
+func addAccountCommand(u in.UpdateMessage) error {
 	var user database.User
 	if err := db.First(&user, u.PeerUser.UserID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
