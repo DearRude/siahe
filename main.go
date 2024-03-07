@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/time/rate"
 
@@ -71,14 +72,31 @@ func main() {
 
 		// Init handlers
 		api := tg.NewClient(client)
-		handlers.InitHandlers(database.Db, api, message.NewSender(api), c.AdminPassword, c.VarificationChat)
+		sender := message.NewSender(api)
+		handlers.InitHandlers(database.Db, api, sender, c.AdminPassword, c.VarificationChat)
 
 		// Setting up handler for incoming message.
 		dispatcher.OnNewMessage(handlers.HandleNewMessage)
 		dispatcher.OnBotCallbackQuery(handlers.HandleCallbacks)
 
-		select {}
+		// Schedule backup to run every 24 hours
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+
+		backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath)
+		for {
+			select {
+			case <-ticker.C:
+				backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath)
+			}
+		}
 	}); err != nil {
 		sugar.Fatalf("Error running client: %w", err)
 	}
+}
+
+func backupDatabase(ctx context.Context, client *tg.Client, sender *message.Sender, targetID int, filepath string) error {
+	uploadedFile := message.FromPath(filepath)
+	_, err := sender.To(&tg.InputPeerChat{ChatID: int64(targetID)}).Upload(uploadedFile).File(ctx)
+	return err
 }
