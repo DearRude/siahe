@@ -78,6 +78,12 @@ func handleCommands(u in.UpdateMessage) error {
 			return activateEventCommand(u)
 		case "deactivateEvent":
 			return deactivateEventCommand(u)
+		case "getTicket":
+			return getTicketCommand(u)
+		case "attendTicket":
+			return attendTicketCommand(u)
+		case "unattendTicket":
+			return unattendTicketCommand(u)
 		}
 	}
 
@@ -616,6 +622,75 @@ func deleteEventCommand(u in.UpdateMessage) error {
 			return err
 		}
 		return nil
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: ticketID
+func getTicketCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	var ticket database.Ticket
+	if err := db.Preload("User").Preload("Event").First(&ticket, targetID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No event found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintTicket(ticket)...)
+	return err
+}
+
+// parameter: ticketID
+func attendTicketCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Model(&database.Ticket{}).Where("id = ?", targetID).Update("status", "attended")
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// parameter: ticketID
+func unattendTicketCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	res := db.Model(&database.Ticket{}).Where("id = ?", targetID).Update("status", "completed")
+	if err := res.Error; err != nil || res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {

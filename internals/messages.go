@@ -469,6 +469,26 @@ func MessageEventIsDeactive() []message.StyledTextOption {
 	}
 }
 
+func MessagePrintTicket(ticket db.Ticket) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Bold("وضعیت بلیط: "),
+		styling.Plain(ticket.Status),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام رویداد: "),
+		styling.Plain(ticket.Event.Name),
+		styling.Plain("\n"), // newline
+		styling.Bold("کاربر با آیدی: "),
+		styling.Code(fmt.Sprintf("%d", ticket.User.ID)),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام: "),
+		styling.Plain(ticket.User.FirstName),
+		styling.Plain("\n"), // newline
+		styling.Bold("نام خانوادگی: "),
+		styling.Plain(ticket.User.LastName),
+		styling.Plain("\n"), // newline
+	}
+}
+
 func MessageMaxTicketIsReached() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("شما بلیط دیگری نمی‌توانید تهیه کنید."),
