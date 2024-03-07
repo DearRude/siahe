@@ -84,6 +84,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return attendTicketCommand(u)
 		case "unattend_ticket":
 			return unattendTicketCommand(u)
+		case "flush_reserves":
+			return flushReservesCommand(u)
 		}
 	}
 
@@ -691,6 +693,27 @@ func unattendTicketCommand(u in.UpdateMessage) error {
 			return err
 		}
 		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func flushReservesCommand(u in.UpdateMessage) error {
+	res := db.Where("status = ?", "reserved").Delete(database.Ticket{})
+	if err := res.Error; err != nil {
+		return err
+	}
+
+	// No event found
+	if res.RowsAffected <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {
