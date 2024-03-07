@@ -196,7 +196,7 @@ func MessageAddPlaceHelp() []message.StyledTextOption {
 
 func MessageAddPlaceExample() []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("/addPlace"),
+		styling.Plain("/add_place"),
 		styling.Plain("\n-\n"),
 		styling.Plain("اتاق آروین"),
 		styling.Plain("\n-\n"),
@@ -217,7 +217,7 @@ func MessageAddEventeHelp() []message.StyledTextOption {
 
 func MessageAddEventExample() []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("/addEvent"),
+		styling.Plain("/add_event"),
 		styling.Plain("\n-\n"),
 		styling.Plain("نشست نمایش‌نامه خوانی چهارصندوق"),
 		styling.Plain("\n-\n"),
