@@ -642,6 +642,12 @@ func deleteEventCommand(u in.UpdateMessage) error {
 		return err
 	}
 
+	// Delete all tickets of the event
+	res = db.Where("event_id = ?", targetID).Delete(&database.Ticket{})
+	if err := res.Error; err != nil {
+		return err
+	}
+
 	// No event found
 	if res.RowsAffected <= 0 {
 		if err := reactToMessage(u, "👎"); err != nil {
