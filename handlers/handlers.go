@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gotd/td/telegram/message"
+	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
 	in "github.com/DearRude/siahe/internals"
@@ -17,6 +18,7 @@ var (
 	UserMap  = in.NewUserDataMap()
 	EventMap = in.NewEventDataMap()
 
+	upper            *uploader.Uploader
 	sender           *message.Sender
 	client           *tg.Client
 	db               *gorm.DB
@@ -24,9 +26,10 @@ var (
 	varificationChat *tg.InputPeerChat
 )
 
-func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, adminPass string, varifChat int) {
+func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, up *uploader.Uploader, adminPass string, varifChat int) {
 	client = tgClient
 	sender = messageSender
+	upper = up
 	db = database
 	adminPassword = adminPass
 	varificationChat = &tg.InputPeerChat{ChatID: int64(varifChat)}

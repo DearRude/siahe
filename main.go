@@ -13,6 +13,7 @@ import (
 	"github.com/gotd/contrib/bg"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/message"
+	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
 	db "github.com/DearRude/siahe/database"
@@ -73,7 +74,8 @@ func main() {
 		// Init handlers
 		api := tg.NewClient(client)
 		sender := message.NewSender(api)
-		handlers.InitHandlers(database.Db, api, sender, c.AdminPassword, c.VarificationChat)
+		uploader := uploader.NewUploader(api)
+		handlers.InitHandlers(database.Db, api, sender, uploader, c.AdminPassword, c.VarificationChat)
 
 		// Setting up handler for incoming message.
 		dispatcher.OnNewMessage(handlers.HandleNewMessage)
@@ -83,11 +85,11 @@ func main() {
 		ticker := time.NewTicker(24 * time.Hour)
 		defer ticker.Stop()
 
-		if err := backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath); err != nil {
+		if err := backupDatabase(ctx, uploader, sender, c.BackupChat, c.SqlitePath); err != nil {
 			sugar.Errorf("error backup database: %w", err)
 		}
 		for range ticker.C {
-			if err := backupDatabase(ctx, api, sender, c.BackupChat, c.SqlitePath); err != nil {
+			if err := backupDatabase(ctx, uploader, sender, c.BackupChat, c.SqlitePath); err != nil {
 				sugar.Errorf("error backup database: %w", err)
 			}
 		}
@@ -97,8 +99,12 @@ func main() {
 	}
 }
 
-func backupDatabase(ctx context.Context, client *tg.Client, sender *message.Sender, targetID int, filepath string) error {
-	uploadedFile := message.FromPath(filepath)
-	_, err := sender.To(&tg.InputPeerChat{ChatID: int64(targetID)}).Upload(uploadedFile).File(ctx)
+func backupDatabase(ctx context.Context, uploader *uploader.Uploader, sender *message.Sender, targetID int, filepath string) error {
+	file, err := uploader.FromPath(ctx, filepath)
+	if err != nil {
+		return err
+	}
+
+	_, err = sender.To(&tg.InputPeerChat{ChatID: int64(targetID)}).Media(ctx, message.UploadedDocument(file).Filename("database.sqlite3").MIME("application/x-sqlite3"))
 	return err
 }
