@@ -1,5 +1,5 @@
 #+title: siahe
-#+html: <img style="height: 13em;"src="https://i.imgur.com/mXwY95v.jpeg"/>
+#+html: <img style="height: 35em;"src="https://i.imgur.com/mXwY95v.jpeg"/>
 
 =siahe= is designed to help university clubs sell tickets for their events through the Telegram messaging platform. The bot provides a seamless ticket purchasing experience for users, allowing them to easily browse available events, select tickets, and sign up directly within the Telegram app.
 
