@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gotd/td/telegram/message"
-	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
 	"github.com/DearRude/siahe/database"
@@ -312,7 +311,7 @@ func exportUsers(u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
 		return nil, err
 	}
 
-	up, err := uploader.NewUploader(client).FromBytes(u.Ctx, "users.csv", buf.Bytes())
+	up, err := upper.FromBytes(u.Ctx, "users.csv", buf.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +379,7 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 		return nil, err
 	}
 
-	up, err := uploader.NewUploader(client).FromBytes(u.Ctx, "tickets.csv", buf.Bytes())
+	up, err := upper.FromBytes(u.Ctx, "tickets.csv", buf.Bytes())
 	if err != nil {
 		return nil, err
 	}
