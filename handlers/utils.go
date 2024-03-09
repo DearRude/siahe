@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gotd/td/telegram/message"
+	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
 	"github.com/DearRude/siahe/database"
@@ -250,4 +253,137 @@ func deleteMessage(u in.UpdateCallback) error {
 	)
 
 	return err
+}
+
+func exportUsers(u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
+	// Query data from the database
+	var users []database.User
+	res := db.Find(&users)
+	if res.Error != nil || len(users) <= 0 {
+		return nil, fmt.Errorf("error getting users from db")
+	}
+
+	// Create a buffer to hold CSV data
+	var buf bytes.Buffer
+
+	// Create a CSV writer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV headers
+	headers := []string{
+		"ID", "FirstName", "LastName", "Role", "PhoneNumber", "IsBoy",
+		"IsFumStudent", "StudentNumber", "FumFaculty", "IsStudent",
+		"IsMashhadStudent", "UniversityName", "EntranceYear", "IsMastPhd",
+		"StudentMajor", "IsGraduateStudent", "IsStudentRelative",
+	}
+	if err := writer.Write(headers); err != nil {
+		return nil, fmt.Errorf("failed to write headers: %w", err)
+	}
+
+	// Write data rows to CSV
+	for _, user := range users {
+		row := []string{
+			strconv.FormatInt(user.ID, 10),
+			user.FirstName,
+			user.LastName,
+			user.Role,
+			user.PhoneNumber,
+			strconv.FormatBool(user.IsBoy),
+			strconv.FormatBool(user.IsFumStudent),
+			user.StudentNumber,
+			user.FumFaculty,
+			strconv.FormatBool(user.IsStudent),
+			strconv.FormatBool(user.IsMashhadStudent),
+			user.UniversityName,
+			user.EntranceYear,
+			strconv.FormatBool(user.IsMastPhd),
+			user.StudentMajor,
+			strconv.FormatBool(user.IsGraduateStudent),
+			strconv.FormatBool(user.IsStudentRelative),
+		}
+		if err := writer.Write(row); err != nil {
+			return nil, fmt.Errorf("failed to write row: %w", err)
+		}
+	}
+
+	writer.Flush()
+
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	up, err := uploader.NewUploader(client).FromBytes(u.Ctx, "users.csv", buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return message.UploadedDocument(up).Filename("users.csv").MIME("text/csv"), nil
+}
+
+func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
+	// Query data from the database
+	var tickets []database.Ticket
+	res := db.Preload("User").Where("event_id = ?", eventID).Find(&tickets)
+	if res.Error != nil || len(tickets) <= 0 {
+		return nil, fmt.Errorf("error getting users from db")
+	}
+
+	// Create a buffer to hold CSV data
+	var buf bytes.Buffer
+
+	// Create a CSV writer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV headers
+	headers := []string{"ID", "PurchaseTime", "Status",
+		"UserID", "FirstName", "LastName", "Role", "PhoneNumber", "IsBoy",
+		"IsFumStudent", "StudentNumber", "FumFaculty", "IsStudent",
+		"IsMashhadStudent", "UniversityName", "EntranceYear", "IsMastPhd",
+		"StudentMajor", "IsGraduateStudent", "IsStudentRelative",
+	}
+	if err := writer.Write(headers); err != nil {
+		return nil, fmt.Errorf("failed to write headers: %w", err)
+	}
+
+	// Write data rows to CSV
+	for _, ticket := range tickets {
+		row := []string{
+			strconv.FormatUint(uint64(ticket.ID), 10),
+			ticket.PurchaseTime.Format(time.RFC3339),
+			ticket.Status,
+			strconv.FormatInt(ticket.User.ID, 10),
+			ticket.User.FirstName,
+			ticket.User.LastName,
+			ticket.User.Role,
+			ticket.User.PhoneNumber,
+			strconv.FormatBool(ticket.User.IsBoy),
+			strconv.FormatBool(ticket.User.IsFumStudent),
+			ticket.User.StudentNumber,
+			ticket.User.FumFaculty,
+			strconv.FormatBool(ticket.User.IsStudent),
+			strconv.FormatBool(ticket.User.IsMashhadStudent),
+			ticket.User.UniversityName,
+			ticket.User.EntranceYear,
+			strconv.FormatBool(ticket.User.IsMastPhd),
+			ticket.User.StudentMajor,
+			strconv.FormatBool(ticket.User.IsGraduateStudent),
+			strconv.FormatBool(ticket.User.IsStudentRelative),
+		}
+		if err := writer.Write(row); err != nil {
+			return nil, fmt.Errorf("failed to write row: %w", err)
+		}
+	}
+
+	writer.Flush()
+
+	if err := writer.Error(); err != nil {
+		return nil, err
+	}
+
+	up, err := uploader.NewUploader(client).FromBytes(u.Ctx, "tickets.csv", buf.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return message.UploadedDocument(up).Filename("tickets.csv").MIME("text/csv"), nil
 }

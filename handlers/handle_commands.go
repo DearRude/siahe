@@ -56,6 +56,8 @@ func handleCommands(u in.UpdateMessage) error {
 		switch command {
 		case "get_user":
 			return getUserCommand(u)
+		case "export_users":
+			return exportUsersCommand(u)
 		case "delete_user":
 			return deleteUserCommand(u)
 		case "add_place":
@@ -80,6 +82,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return deactivateEventCommand(u)
 		case "get_ticket":
 			return getTicketCommand(u)
+		case "export_tickets":
+			return exportTicketsCommand(u)
 		case "attend_ticket":
 			return attendTicketCommand(u)
 		case "unattend_ticket":
@@ -288,6 +292,26 @@ func getUserCommand(u in.UpdateMessage) error {
 	}
 	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintUser(user)...)
 	return err
+}
+
+func exportUsersCommand(u in.UpdateMessage) error {
+	users, err := exportUsers(u)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).Media(u.Ctx, users); err != nil {
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // parameter: userID
@@ -656,6 +680,32 @@ func getTicketCommand(u in.UpdateMessage) error {
 	}
 	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintTicket(ticket)...)
 	return err
+}
+
+// parameter: eventID
+func exportTicketsCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	tickets, err := exportTickets(targetID, u)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).Media(u.Ctx, tickets); err != nil {
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // parameter: ticketID
