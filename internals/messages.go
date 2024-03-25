@@ -175,7 +175,8 @@ func MessageAskIsRelative() []message.StyledTextOption {
 
 func MessageSignUpFinished(name string) []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain(fmt.Sprintf("%s جان، ثبت نام شما به پایان رسید.", name)),
+		styling.Plain(fmt.Sprintf("%s جان، ثبت نام شما به پایان رسید \n.", name)),
+		styling.Plain("اگر در حال تهیه بلیط بودی، الان می‌تونی دوباره امتحان کنی."),
 	}
 }
 
