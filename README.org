@@ -73,6 +73,51 @@ docker compose up -d --force-recreate
 docker compose logs -f
 #+end_src
 
+** Run
+*Note*: ~<param>~ means a mandatory parameter while ~[param]~ means an optional parameter.
+
+1. Make sure that the bot is running by sending ~/start~ command to it.
+2. Make an account by ~/add_account~ command.
+3. Change your status to *moderator* by ~/promote_me <admin_password>~. A moderator can _promote_ and _demote_ other *admin* aside from running admin commands.
+4. Run other commands accordingly.
+
+*** User commands
+- ~/start~ boots the bot. Given a ~getTicket_<event_id>~ as parameter, it can be used to purchase ticket(s).
+- ~/add_account~ add a permanent account to bot, similar to signing up to a website authentication.
+- ~/get_account~ prints data about user's own account.
+- ~/delete_account~ delete user's account.
+
+*** Admin commands
+**** User handling
+- ~/get_user <user_id>~ prints a user's info by theirs telegram user_id
+- ~/delete_user <user_id>~ deletes a user's account.
+- ~/export_users~ exports all users info into a CSV file.
+
+**** Place handling
+A place is a database entity that events take place in. For more info, run ~/add_place~ command.
+
+- ~/add_place~ add and define a place to database. This will generate a unique ~place_id~.
+- ~/get_place <place_id>~ prints data about place.
+- ~/get_places~ prints a minimal data about all places. This include their place_id and name. It is useful if you want to event a place id by its name.
+- ~/delete_place <place_id>~ deletes a place by its id.
+
+**** Event handling
+An event is a database entity that users can get tickets for. For more info, run ~/add_event~ command.
+
+- ~/add_event~ add and define a event to database. This will generate a unique ~event_id~.
+- ~/get_event <event_id>~ prints data about event.
+- ~/get_events~ prints a minimal data about all events. This include their event_id and name. It is useful if you want to find an event id by its name.
+- ~/delete_event <event_id>~ deletes a place by its id.
+- ~/activate_event <event_id>~ activating an event enables users to get ticket for it. Events are activated by default upon creation.
+- ~/deactivate_event <event_id>~ deactivating an event disables users to get ticket for it.
+
+**** Ticket handling
+A ticket is a sign for users that they can attend events. In order to get a ticket for the user, they can open a URL of such pattern: ~https://t.me/<bot_username>?start=getTicket_<event_id>~. For example if bot's username is ~@fumTheatreSignupBot~ and you want to generate a link for users to get tickets for event_id 1, according to schema the URL is: ~https://t.me/fumTheatreSignupBot?start=getTicket_1~
+
+- ~/get_ticket <ticket_id>~ shows info about a ticket and its owner. Used to check the validity of the ticket.
+- ~/attend_ticket <ticket_id>~ changes the ticket _status_ from ~completed~ to ~attended~. Used to track who showed up if they got any ticket.
+- ~/unattend_ticket <ticket_id>~ reverses the functionality of prior command.
+- ~/export_tickets <event_id>~ exports all tickets of an event to a CSV file.
 
 ** Licence
 AGPLv3+
