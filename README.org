@@ -31,15 +31,6 @@ siahe
 *** Run by Docker
 =siahe= [[https://github.com/TopSelectOrg/toucanet/pkgs/container/toucanet][images]] are built upon each commit on Github container registry (ghcr) with =latest= tag.
 
-Authorize to GHCR by [[https://github.com/settings/tokens][making a PAT]] that has =read:packages= permission. ([[https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic][info]])
-
-Make siahe assets directory and grant nonroot permission to it.
-#+begin_src bash
-mkdir siahe_assets
-sudo chown 65532 siahe_assets
-sudo chmod a+w siahe_assets
-#+end_src
-
 Generate the following =docker-compose.yml= file.
 #+begin_src yaml
 version: '3'
