@@ -29,7 +29,7 @@ siahe
 #+end_src
 
 *** Run by Docker
-=siahe= [[https://github.com/TopSelectOrg/toucanet/pkgs/container/toucanet][images]] are built upon each commit on Github container registry (ghcr) with =latest= tag.
+=siahe= [[https://github.com/dearrude/siahe/pkgs/container/siahe][images]] are built upon each commit on Github container registry (ghcr) with =latest= tag.
 
 Generate the following =docker-compose.yml= file.
 #+begin_src yaml
