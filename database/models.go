@@ -6,6 +6,7 @@ import (
 
 type User struct {
 	ID          int64 `gorm:"primaryKey"`
+	AccessHash  int64
 	FirstName   string
 	LastName    string
 	Role        string

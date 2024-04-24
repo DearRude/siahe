@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -18,6 +19,10 @@ func handleCommands(u in.UpdateMessage) error {
 	StateMap.Set(u.PeerUser.UserID, in.CommandState)
 	UserMap.Delete(u.PeerUser.UserID)
 	EventMap.Delete(u.PeerUser.UserID)
+
+	// Update AccessHash cache
+	// TODO: this method is slightly unefficient. Use in-memory databases instead.
+	db.Model(&database.User{}).Where("id = ?", u.PeerUser.UserID).Update("access_hash", u.PeerUser.AccessHash)
 
 	// Handle user commands
 	switch command {
@@ -847,11 +852,12 @@ func messageEventCommand(u in.UpdateMessage) error {
 	}
 
 	for _, ticket := range tickets {
-		if _, err := sender.Resolve(ticket.User.PhoneNumber).Builder.StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
+		peer := toInputPeerUser(ticket.User)
+		if _, err := sender.To(&peer).StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
 			if err := reactToMessage(u, "👎"); err != nil {
 				return err
 			}
-			return err
+			return fmt.Errorf("could not send message to user: %w", err)
 		}
 	}
 	if err := reactToMessage(u, "👍"); err != nil {

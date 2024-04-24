@@ -386,3 +386,10 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 
 	return message.UploadedDocument(up).Filename("tickets.csv").MIME("text/csv"), nil
 }
+
+func toInputPeerUser(u database.User) tg.InputPeerUser {
+	return tg.InputPeerUser{
+		UserID:     u.ID,
+		AccessHash: u.AccessHash,
+	}
+}
