@@ -91,6 +91,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return getTicketCommand(u)
 		case "export_tickets":
 			return exportTicketsCommand(u)
+		case "preview_tickets":
+			return previewTicketsCommand(u)
 		case "attend_ticket":
 			return attendTicketCommand(u)
 		case "unattend_ticket":
@@ -721,6 +723,30 @@ func exportTicketsCommand(u in.UpdateMessage) error {
 	}
 
 	return nil
+}
+
+// parameter: eventID
+func previewTicketsCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	var tickets []database.Ticket
+	res := db.Preload("User").Where("event_id = ?", targetID).Find(&tickets)
+	if res.Error != nil || len(tickets) <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(tickets)...)
+	return err
 }
 
 // parameter: ticketID

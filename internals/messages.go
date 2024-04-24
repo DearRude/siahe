@@ -2,6 +2,7 @@ package internals
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/telegram/message/markup"
@@ -618,6 +619,22 @@ func MessageTicketSendPayment(event db.Event) []message.StyledTextOption {
 		styling.Plain("ارسال کنید.\n\n"),
 		styling.Plain(event.Description),
 	}
+}
+
+func MessagePreviewTickets(tickets []db.Ticket) []message.StyledTextOption {
+	var m []message.StyledTextOption
+	for idx, ticket := range tickets {
+		// Generate phone deeplink
+		phone := ticket.User.PhoneNumber
+		if !strings.HasPrefix(phone, "+") {
+			phone = "+" + phone
+		}
+		phone = "https://t.me/" + phone
+
+		m = append(m, styling.TextURL(fmt.Sprintf("%d - %s %s - %d \n", idx+1, ticket.User.FirstName, ticket.User.LastName, ticket.ID), phone))
+	}
+
+	return m
 }
 
 func MessageTicketPaymentIncorrect() []message.StyledTextOption {

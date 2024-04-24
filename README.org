@@ -112,6 +112,7 @@ A ticket is a sign for users that they can attend events. In order to get a tick
 - ~/unattend_ticket <ticket_id>~ reverses the functionality of prior command.
 - ~/delete_ticket <ticket_id>~ removes a ticket from database.
 - ~/export_tickets <event_id>~ exports all tickets of an event to a CSV file.
+- ~/preview_tickets <event_id>~ preview all tickets of an event to a telegram message.
 
 ** Licence
 AGPLv3+
