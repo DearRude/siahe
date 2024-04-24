@@ -102,6 +102,7 @@ An event is a database entity that users can get tickets for. For more info, run
 - ~/activate_event <event_id>~ activating an event enables users to get ticket for it. Events are activated by default upon creation.
 - ~/deactivate_event <event_id>~ deactivating an event disables users to get ticket for it.
 - ~/flush_reserves <event_id>~ delete all reserved tickets for an event.
+- ~/message_event~ sends a message to all who got a ticket for the event.
 
 **** Ticket handling
 A ticket is a sign for users that they can attend events. In order to get a ticket for the user, they can open a URL of such pattern: ~https://t.me/<bot_username>?start=getTicket_<event_id>~. For example if bot's username is ~@fumTheatreSignupBot~ and you want to generate a link for users to get tickets for event_id 1, according to schema the URL is: ~https://t.me/fumTheatreSignupBot?start=getTicket_1~

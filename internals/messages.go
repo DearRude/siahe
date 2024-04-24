@@ -232,6 +232,33 @@ func MessageAddEventExample() []message.StyledTextOption {
 	}
 }
 
+func MessageMessageEventeHelp() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("اطلاعات را با خط تیره - فاصله گذاری کنید. \n"),
+		styling.Plain("اطلاعات مربوط به «پیام‌دادن به ثبت‌نامی های یک رویداد» عبارت‌اند از: "),
+		styling.Bold("آیدی رویداد، پیام\n"),
+		styling.Plain("برای مثال: \n\n"),
+	}
+}
+
+func MessageMessageEventSend(name, text string) []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain(fmt.Sprintf("%s عزیز، \n", name)),
+		styling.Plain("پیام زیر از طرف ادمین ربات به شما ارسال شده است: \n"),
+		styling.Blockquote(text),
+	}
+}
+
+func MessageMessageEventExample() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("/add_event"),
+		styling.Plain("\n-\n"),
+		styling.Plain("3"),
+		styling.Plain("\n-\n"),
+		styling.Plain("با سلام به شما. زمان نشست از دوشنبه به سه‌شنبه تغییر پیدا کرده است. لطفاً در زمان مقرر شده حضور یابید."),
+	}
+}
+
 func ButtonYesNo() []tg.KeyboardButtonClass {
 	return []tg.KeyboardButtonClass{
 		markup.Callback("بله", []byte("yes")),

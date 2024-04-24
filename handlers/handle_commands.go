@@ -80,6 +80,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return activateEventCommand(u)
 		case "deactivate_event":
 			return deactivateEventCommand(u)
+		case "message_event":
+			return messageEventCommand(u)
 		case "get_ticket":
 			return getTicketCommand(u)
 		case "export_tickets":
@@ -801,6 +803,57 @@ func flushReservesCommand(u in.UpdateMessage) error {
 		return nil
 	}
 
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// line parameters: eventID, message
+func messageEventCommand(u in.UpdateMessage) error {
+	params := getCommandLines(u)
+	if len(params) != 2 { // only two parameters
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageEventeHelp()...); err != nil {
+			return err
+		}
+
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageEventExample()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	eventID, err := strconv.ParseUint(params[0], 10, 64)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	// Get the number of signups
+	var tickets []database.Ticket
+	if err := db.Preload("User").Preload("Event").Where("event_id = ?", eventID).Find(&tickets).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	for _, ticket := range tickets {
+		if _, err := sender.Resolve(ticket.User.PhoneNumber).Builder.StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+			return err
+		}
+	}
 	if err := reactToMessage(u, "👍"); err != nil {
 		return err
 	}
