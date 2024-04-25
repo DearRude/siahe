@@ -322,7 +322,7 @@ func exportUsers(u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
 func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
 	// Query data from the database
 	var tickets []database.Ticket
-	res := db.Preload("User").Where("event_id = ?", eventID).Find(&tickets)
+	res := db.Preload("User").Where("event_id = ?", eventID).Order("purchase_time").Find(&tickets)
 	if res.Error != nil || len(tickets) <= 0 {
 		return nil, fmt.Errorf("error getting users from db")
 	}

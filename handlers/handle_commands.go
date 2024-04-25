@@ -733,7 +733,7 @@ func previewTicketsCommand(u in.UpdateMessage) error {
 	}
 
 	var tickets []database.Ticket
-	res := db.Preload("User").Where("event_id = ?", targetID).Find(&tickets)
+	res := db.Preload("User").Where("event_id = ?", targetID).Order("purchase_time").Find(&tickets)
 	if res.Error != nil || len(tickets) <= 0 {
 		if err := reactToMessage(u, "👎"); err != nil {
 			return err
