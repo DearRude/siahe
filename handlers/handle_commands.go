@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -879,11 +878,8 @@ func messageEventCommand(u in.UpdateMessage) error {
 
 	for _, ticket := range tickets {
 		peer := toInputPeerUser(ticket.User)
-		if _, err := sender.To(&peer).StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
-			if err := reactToMessage(u, "👎"); err != nil {
-				return err
-			}
-			return fmt.Errorf("could not send message to user: %w", err)
+		if _, _ = sender.To(&peer).StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
+			_ = reactToMessage(u, "👎")
 		}
 	}
 	if err := reactToMessage(u, "👍"); err != nil {
