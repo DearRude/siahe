@@ -470,7 +470,8 @@ func MessagePrintEvents(events []db.Event) []message.StyledTextOption {
 	for _, event := range events {
 		m = append(m, []styling.StyledTextOption{
 			styling.Code(fmt.Sprintf("%d", event.ID)),
-			styling.Plain(fmt.Sprintf(": %s\n", event.Name)),
+			styling.Plain(fmt.Sprintf(": %s - ", event.Name)),
+			styling.Code(fmt.Sprintf("%s\n", boolToActive(event.IsActive))),
 		}...)
 	}
 
@@ -663,4 +664,11 @@ func boolToGender(b bool) string {
 		return "مرد"
 	}
 	return "زن"
+}
+
+func boolToActive(b bool) string {
+	if b {
+		return "فعال"
+	}
+	return "غیرفعال"
 }
