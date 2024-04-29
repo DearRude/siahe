@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"gorm.io/gorm"
 	"strconv"
 	"strings"
 
 	"github.com/DearRude/siahe/database"
 	in "github.com/DearRude/siahe/internals"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func handleCommands(u in.UpdateMessage) error {
@@ -533,7 +535,10 @@ func addEventCommand(u in.UpdateMessage) error {
 		IsActive:       true, // An event is a active by default
 	}
 
-	res := db.Create(&event)
+	res := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoUpdates: clause.AssignmentColumns([]string{"description", "is_paid", "max_ticket_batch", "place_id"}),
+	}).Create(&event)
 	if err := res.Error; err != nil {
 		if err := reactToMessage(u, "👎"); err != nil {
 			return err
