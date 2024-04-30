@@ -77,6 +77,7 @@ docker compose logs -f
 - ~/add_account~ add a permanent account to bot, similar to signing up to a website authentication.
 - ~/get_account~ prints data about user's own account.
 - ~/delete_account~ delete user's account.
+- ~/available_events~ shows all available events to get tickets for
 
 *** Admin commands
 **** User handling
@@ -105,7 +106,7 @@ An event is a database entity that users can get tickets for. For more info, run
 - ~/message_event~ sends a message to all who got a ticket for the event.
 
 **** Ticket handling
-A ticket is a sign for users that they can attend events. In order to get a ticket for the user, they can open a URL of such pattern: ~https://t.me/<bot_username>?start=getTicket_<event_id>~. For example if bot's username is ~@fumTheatreSignupBot~ and you want to generate a link for users to get tickets for event_id 1, according to schema the URL is: ~https://t.me/fumTheatreSignupBot?start=getTicket_1~
+A ticket is a sign for users that they can attend events. In order to get a ticket for the user, they can open a URL of such pattern: ~https://t.me/<bot_username>?start=getTicket_<event_id>~. For example if bot's username is ~@fumTheatreSignupBot~ and you want to generate a link for users to get tickets for event_id 1, according to schema the URL is: ~https://t.me/fumTheatreSignupBot?start=getTicket_1~. In order to show all available events, the following URL can be used: ~https://t.me/fumTheatreSignupBot?start=availableEvents~
 
 - ~/get_ticket <ticket_id>~ shows info about a ticket and its owner. Used to check the validity of the ticket.
 - ~/attend_ticket <ticket_id>~ changes the ticket _status_ from ~completed~ to ~attended~. Used to track who showed up if they got any ticket.
