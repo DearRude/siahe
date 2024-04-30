@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
@@ -20,13 +21,15 @@ var (
 
 	upper            *uploader.Uploader
 	sender           *message.Sender
+	rawClient        *telegram.Client
 	client           *tg.Client
 	db               *gorm.DB
 	adminPassword    string
 	varificationChat *tg.InputPeerChat
 )
 
-func InitHandlers(database *gorm.DB, tgClient *tg.Client, messageSender *message.Sender, up *uploader.Uploader, adminPass string, varifChat int) {
+func InitHandlers(database *gorm.DB, raw *telegram.Client, tgClient *tg.Client, messageSender *message.Sender, up *uploader.Uploader, adminPass string, varifChat int) {
+	rawClient = raw
 	client = tgClient
 	sender = messageSender
 	upper = up

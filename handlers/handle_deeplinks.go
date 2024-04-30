@@ -9,6 +9,53 @@ import (
 	in "github.com/DearRude/siahe/internals"
 )
 
+func getAvailableEvents(u in.UpdateMessage) error {
+	// Check if user has account
+	var user database.User
+	if err := db.First(&user, u.PeerUser.UserID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// User has no account
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+			_, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageUserHasNoAccount()...)
+			return err
+		}
+		return err
+	}
+
+	// Get Events
+	var events []database.Event
+	if err := db.Model(&database.Event{}).Where("is_active = ?", true).Find(&events).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// No event found
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	// Get bot username
+	self, err := rawClient.Self(u.Ctx)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePrintAvailableEvents(self.Username, events)...); err != nil {
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // parameter: eventID
 func getTicketDeepLink(u in.UpdateMessage) error {
 	// Check if user has account

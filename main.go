@@ -75,7 +75,7 @@ func main() {
 		api := tg.NewClient(client)
 		sender := message.NewSender(api)
 		uploader := uploader.NewUploader(api)
-		handlers.InitHandlers(database.Db, api, sender, uploader, c.AdminPassword, c.VarificationChat)
+		handlers.InitHandlers(database.Db, client, api, sender, uploader, c.AdminPassword, c.VarificationChat)
 
 		// Setting up handler for incoming message.
 		dispatcher.OnNewMessage(handlers.HandleNewMessage)

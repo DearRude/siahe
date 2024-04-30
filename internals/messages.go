@@ -174,10 +174,11 @@ func MessageAskIsRelative() []message.StyledTextOption {
 	}
 }
 
-func MessageSignUpFinished(name string) []message.StyledTextOption {
+func MessageSignUpFinished(name, link string) []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain(fmt.Sprintf("%s جان، ثبت نام شما به پایان رسید \n.", name)),
-		styling.Plain("اگر در حال تهیه بلیط بودی، الان می‌تونی دوباره امتحان کنی."),
+		styling.Plain("اگر در حال تهیه بلیط بودی، الان می‌تونی دوباره امتحان کنی. روی دکمه زیر کلیک کن: \n"),
+		styling.TextURL("مشاهده بلیط‌ها", link),
 	}
 }
 
@@ -662,6 +663,20 @@ func MessagePaymentVarification(event db.Event, user db.User, soldTickets int64)
 		styling.Plain(fmt.Sprintf("تعداد بلیط درخواستی: %d\n", event.MaxTicketBatch)),
 		styling.Plain(fmt.Sprintf("تعداد بلیط از قبل خریده شده: %d\n", soldTickets)),
 	}
+}
+
+func MessagePrintAvailableEvents(username string, events []db.Event) []message.StyledTextOption {
+	var m []message.StyledTextOption
+	m = append(m, styling.Plain("رویدادهای فعال شرح زیر است. برای تهیه بلیط، روی آن‌ها کلیک کنید و دکمه Start را بزنید. \n\n"))
+
+	for idx, event := range events {
+		// Generate ticket deeplink
+		link := fmt.Sprintf("https://t.me/%s?start=getTicket_%d", username, event.ID)
+
+		m = append(m, styling.TextURL(fmt.Sprintf("%d:  %s \n", idx+1, event.Name), link))
+	}
+
+	return m
 }
 
 func boolToText(b bool) string {

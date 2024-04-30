@@ -225,8 +225,15 @@ func signUpCheckInfo(u in.UpdateCallback) error {
 		return err
 	}
 
+	// Get bot username
+	self, err := rawClient.Self(u.Ctx)
+	if err != nil {
+		return err
+	}
+	link := fmt.Sprintf("https://t.me/%s?start=availableEvents", self.Username)
+
 	// Finish singUp
-	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageSignUpFinished(user.FirstName)...); err != nil {
+	if _, err := sender.To(u.PeerUser).Reply(u.Ubc.GetMsgID()).StyledText(u.Ctx, in.MessageSignUpFinished(user.FirstName, link)...); err != nil {
 		return err
 	}
 

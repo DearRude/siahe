@@ -35,6 +35,8 @@ func handleCommands(u in.UpdateMessage) error {
 		return deleteAccountCommand(u)
 	case "get_account":
 		return getAccountCommand(u)
+	case "available_events":
+		return getAvailableEvents(u)
 	case "promote_me":
 		return promoteMeCommand(u)
 	}
@@ -123,6 +125,8 @@ func startCommand(u in.UpdateMessage) error {
 		switch command {
 		case "getTicket":
 			return getTicketDeepLink(u)
+		case "availableEvents":
+			return getAvailableEvents(u)
 		}
 	}
 
