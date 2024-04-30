@@ -644,11 +644,23 @@ func MessageTicketPaymentIncorrect() []message.StyledTextOption {
 	}
 }
 
-func MessagePaymentVarification(event db.Event, userId, accessHash int64) []message.StyledTextOption {
+func MessagePaymentVarification(event db.Event, user db.User, soldTickets int64) []message.StyledTextOption {
+	phone := user.PhoneNumber
+	if !strings.HasPrefix(phone, "+") {
+		phone = "+" + phone
+	}
+	phone = "https://t.me/" + phone
+
 	return []message.StyledTextOption{
-		styling.Code(fmt.Sprintf("%d %d %d\n\n", event.ID, userId, accessHash)),
+		styling.Code(fmt.Sprintf("%d %d %d\n\n", event.ID, user.ID, user.AccessHash)),
+		styling.Plain("آیدی یوزر: "),
+		styling.Code(fmt.Sprintf("%d\n", user.ID)),
+		styling.Plain("نام و نام خانوادگی: "),
+		styling.TextURL(fmt.Sprintf("%s %s \n", user.FirstName, user.LastName), phone),
+		styling.Plain(fmt.Sprintf("دانشجوی فردوسی؟: %s\n", boolToText(user.IsFumStudent))),
 		styling.Plain(fmt.Sprintf("نام رویداد: %s\n", event.Name)),
-		styling.Plain(fmt.Sprintf("تعداد بلیط: %d\n", event.MaxTicketBatch)),
+		styling.Plain(fmt.Sprintf("تعداد بلیط درخواستی: %d\n", event.MaxTicketBatch)),
+		styling.Plain(fmt.Sprintf("تعداد بلیط از قبل خریده شده: %d\n", soldTickets)),
 	}
 }
 

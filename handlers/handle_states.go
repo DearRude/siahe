@@ -307,7 +307,21 @@ func getTicketPayment(u in.UpdateMessage) error {
 
 	// Varification sent to chat
 	event, _ := EventMap.Get(u.PeerUser.UserID)
-	if _, err := sender.To(varificationChat).Row(in.ButtonYesNo()...).Photo(u.Ctx, photoInput, in.MessagePaymentVarification(event, u.PeerUser.UserID, u.PeerUser.AccessHash)...); err != nil {
+
+	var user database.User
+	db.First(&user, u.PeerUser.UserID)
+
+	// Check user past sold tickets
+	var soldTickets int64
+	if err := db.Model(&database.Ticket{}).Where("user_id = ? AND event_id = ? AND status = ?", u.PeerUser.UserID, event.ID, "completed").
+		Count(&soldTickets).Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.To(varificationChat).Row(in.ButtonYesNo()...).Photo(u.Ctx, photoInput, in.MessagePaymentVarification(event, user, soldTickets)...); err != nil {
 		return err
 	}
 
