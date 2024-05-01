@@ -327,6 +327,13 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 		return nil, fmt.Errorf("error getting users from db")
 	}
 
+	// Load Tehran timezone
+	location, err := time.LoadLocation("Asia/Tehran")
+	if err != nil {
+		fmt.Println("Error loading location:", err)
+		return nil, err
+	}
+
 	// Create a buffer to hold CSV data
 	var buf bytes.Buffer
 
@@ -348,7 +355,7 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 	for _, ticket := range tickets {
 		row := []string{
 			strconv.FormatUint(uint64(ticket.ID), 10),
-			ticket.PurchaseTime.Format(time.RFC3339),
+			ticket.PurchaseTime.In(location).Format(time.RFC3339),
 			ticket.Status,
 			strconv.FormatInt(ticket.User.ID, 10),
 			ticket.User.FirstName,
