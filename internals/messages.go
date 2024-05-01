@@ -674,7 +674,7 @@ func MessagePrintAvailableEvents(username string, events []db.Event) []message.S
 		// Generate ticket deeplink
 		link := fmt.Sprintf("https://t.me/%s?start=getTicket_%d", username, event.ID)
 
-		m = append(m, styling.TextURL(fmt.Sprintf("%d:  %s \n", idx+1, event.Name), link))
+		m = append(m, styling.TextURL(fmt.Sprintf("%d.  %s \n", idx+1, event.Name), link))
 	}
 
 	return m
