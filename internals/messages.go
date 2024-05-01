@@ -614,12 +614,11 @@ func MessageTicketNotAccepted() []message.StyledTextOption {
 	}
 }
 
-func MessageTicketSendPayment(event db.Event) []message.StyledTextOption {
+func MessageTicketSendPayment() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("با توجه به توضیحات رویداد و تعداد بلیط‌های خریداری شده، اطلاعات واریز خود را به صورت "),
 		styling.Bold("عکس (اسکرین شات) "),
 		styling.Plain("ارسال کنید.\n\n"),
-		styling.Plain(event.Description),
 	}
 }
 

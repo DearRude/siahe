@@ -279,14 +279,11 @@ func getTicketCount(u in.UpdateMessage) error {
 	}
 
 	// Event is paid
-	if _, err := generateTicket(u, int(count), "reserved"); err != nil {
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketSendPayment()...); err != nil {
 		return err
 	}
-	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageTicketSendPayment(event)...); err != nil {
-		return err
-	}
-	StateMap.Set(u.PeerUser.UserID, in.GetTicketPayment)
 
+	StateMap.Set(u.PeerUser.UserID, in.GetTicketPayment)
 	event.MaxTicketBatch = uint(count)
 	EventMap.Set(u.PeerUser.UserID, event)
 	return nil
@@ -305,8 +302,11 @@ func getTicketPayment(u in.UpdateMessage) error {
 		return err
 	}
 
-	// Varification sent to chat
+	// Reserves generated
 	event, _ := EventMap.Get(u.PeerUser.UserID)
+	if _, err := generateTicket(u, int(event.MaxTicketBatch), "reserved"); err != nil {
+		return err
+	}
 
 	var user database.User
 	db.First(&user, u.PeerUser.UserID)
