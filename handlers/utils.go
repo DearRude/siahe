@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gotd/td/telegram/message"
+	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 
 	"github.com/DearRude/siahe/database"
@@ -44,6 +45,14 @@ func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {
 		return nil, fmt.Errorf("user not found in entities")
 	}
 	return user, nil
+}
+
+func getInputPeerChat(peer tg.PeerClass) (*tg.InputPeerChat, error) {
+	peerChat, ok := peer.(*tg.PeerChat)
+	if !ok {
+		return nil, fmt.Errorf("peerclass could not reflect to peer chat")
+	}
+	return peerChat.AsInput(), nil
 }
 
 func getTextFromContact(u in.UpdateMessage) (string, error) {
@@ -244,10 +253,16 @@ func getUserEventIDFromVarification(u in.UpdateCallback) (*tg.InputPeerUser, uin
 	return peer, uint(eventID), nil
 }
 
-func deleteMessage(u in.UpdateCallback) error {
-	_, err := client.MessagesDeleteMessages(u.Ctx, &tg.MessagesDeleteMessagesRequest{
-		ID:     []int{u.Ubc.MsgID},
-		Revoke: true,
+func seenMessage(u in.UpdateCallback) error {
+	inputPeer, err := getInputPeerChat(u.Ubc.GetPeer())
+	if err != nil {
+		return err
+	}
+
+	_, err = client.MessagesEditMessage(u.Ctx, &tg.MessagesEditMessageRequest{
+		ID:          u.Ubc.MsgID,
+		Peer:        inputPeer,
+		ReplyMarkup: markup.InlineRow(markup.Callback("بررسی شد.", []byte("some_random_thing"))),
 	},
 	)
 
