@@ -622,8 +622,10 @@ func MessageTicketSendPayment() []message.StyledTextOption {
 	}
 }
 
-func MessagePreviewTickets(tickets []db.Ticket) []message.StyledTextOption {
+func MessagePreviewTickets(event db.Event, tickets []db.Ticket) []message.StyledTextOption {
 	var m []message.StyledTextOption
+	m = append(m, styling.Bold(fmt.Sprintf("لیست بلیط‌های رویداد %s: \n\n", event.Name)))
+
 	for idx, ticket := range tickets {
 		// Generate phone deeplink
 		phone := ticket.User.PhoneNumber

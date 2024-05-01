@@ -740,6 +740,16 @@ func previewTicketsCommand(u in.UpdateMessage) error {
 		return err
 	}
 
+	// Get event
+	var event database.Event
+	if db.Where("id = ?", targetID).First(&event).Error != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	// Get tickets for that event
 	var tickets []database.Ticket
 	res := db.Preload("User").Where("event_id = ?", targetID).Order("purchase_time").Find(&tickets)
 	if res.Error != nil || len(tickets) <= 0 {
@@ -753,7 +763,8 @@ func previewTicketsCommand(u in.UpdateMessage) error {
 		return err
 	}
 
-	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(tickets)...)
+	// Print the info
+	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(event, tickets)...)
 	return err
 }
 
