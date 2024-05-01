@@ -306,7 +306,7 @@ func varificationChatResponse(u in.UpdateCallback) error {
 	}
 
 	// Delete the message
-	if err := seenMessage(u); err != nil {
+	if err := seenMessage(u, accept); err != nil {
 		return err
 	}
 

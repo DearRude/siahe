@@ -253,7 +253,12 @@ func getUserEventIDFromVarification(u in.UpdateCallback) (*tg.InputPeerUser, uin
 	return peer, uint(eventID), nil
 }
 
-func seenMessage(u in.UpdateCallback) error {
+func seenMessage(u in.UpdateCallback, isAccpeted bool) error {
+	seenMessage := "رد شد."
+	if isAccpeted {
+		seenMessage = "قبول شد."
+	}
+
 	inputPeer, err := getInputPeerChat(u.Ubc.GetPeer())
 	if err != nil {
 		return err
@@ -262,7 +267,7 @@ func seenMessage(u in.UpdateCallback) error {
 	_, err = client.MessagesEditMessage(u.Ctx, &tg.MessagesEditMessageRequest{
 		ID:          u.Ubc.MsgID,
 		Peer:        inputPeer,
-		ReplyMarkup: markup.InlineRow(markup.Callback("بررسی شد.", []byte("some_random_thing"))),
+		ReplyMarkup: markup.InlineRow(markup.Callback(seenMessage, []byte("some_random_thing"))),
 	},
 	)
 
