@@ -104,6 +104,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return deleteTicketCommand(u)
 		case "flush_reserves":
 			return flushReservesCommand(u)
+		case "count_tickets":
+			return countTicketsCommand(u)
 		}
 	}
 
@@ -854,6 +856,28 @@ func flushReservesCommand(u in.UpdateMessage) error {
 	}
 
 	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func countTicketsCommand(u in.UpdateMessage) error {
+	var count int64
+
+	res := db.Model(database.Ticket{}).Count(&count)
+	if err := res.Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageCountTickets(count)...); err != nil {
 		return err
 	}
 
