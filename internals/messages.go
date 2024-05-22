@@ -246,7 +246,7 @@ func MessageMessageEventeHelp() []message.StyledTextOption {
 func MessageCountTickets(count int64) []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("تعداد همهٔ بلیط‌های در دیتابیس و مقدار پر بودن دیتابیس:\n"),
-		styling.Code(fmt.Sprintf("%d/9999 \n %.2f%%", count, float64(count)/9999)),
+		styling.Code(fmt.Sprintf("%d/9999 \n %.2f%%", count, float64(count)/99)),
 	}
 }
 
