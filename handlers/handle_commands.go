@@ -887,7 +887,7 @@ func messageEventCommand(u in.UpdateMessage) error {
 
 	// Get the number of signups
 	var tickets []database.Ticket
-	if err := db.Preload("User").Preload("Event").Where("event_id = ?", eventID).Find(&tickets).Error; err != nil {
+	if err := db.Preload("User").Preload("Event").Where("event_id = ?", eventID).Distinct("user_id").Find(&tickets).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			if err := reactToMessage(u, "👎"); err != nil {
 				return err
