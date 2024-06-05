@@ -9,8 +9,6 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +20,7 @@ import (
 	"github.com/DearRude/siahe/database"
 	in "github.com/DearRude/siahe/internals"
 )
+import _ "embed"
 
 func getCommandName(u in.UpdateMessage) string {
 	text := u.Message.GetMessage()
@@ -51,14 +50,6 @@ func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {
 		return nil, fmt.Errorf("user not found in entities")
 	}
 	return user, nil
-}
-
-func getExecutableDir() (string, error) {
-	exePath, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Abs(filepath.Dir(exePath))
 }
 
 func getInputPeerChat(peer tg.PeerClass) (*tg.InputPeerChat, error) {
@@ -428,15 +419,13 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 	return message.UploadedDocument(up).Filename("tickets.csv").MIME("text/csv"), nil
 }
 
+//go:embed html-templates/ticket-pdf-template.html
+var ticketPDFTemplate string
+
 func sendTicketsPDF(tickets []database.Ticket, u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
 	var buf bytes.Buffer
 
-	cwd, err := getExecutableDir()
-	if err != nil {
-		return nil, err
-	}
-
-	tmpl, err := template.ParseFiles(fmt.Sprintf("%s/internals/ticket-pdf-template.html", cwd))
+	tmpl, err := template.New("index").Parse(ticketPDFTemplate)
 	if err != nil {
 		return nil, err
 	}
