@@ -17,6 +17,7 @@ type Config struct {
 	AdminPassword    string
 	VarificationChat int
 	BackupChat       int
+	GotenbergURL     string
 
 	// Optionals
 	SqlitePath  string
@@ -32,6 +33,8 @@ func GenConfig() Config {
 		appId    = fs.Int("appId", 0, "AppID in Telegram API")
 		appHash  = fs.String("appHash", "", "AppHash in Telegram API")
 		botToken = fs.String("botToken", "", "BotToken given by BotFather bot")
+
+		gotenbergUrl = fs.String("gotenbergUrl", "", "url of html to pdf service")
 
 		sqlitePath  = fs.String("sqlitePath", "./assets/sqlite.db", "relative or absloute path of sqlite db")
 		sessionPath = fs.String("sessionPath", "./assets/session.json", "relative or absloute path of session auth file")
@@ -63,6 +66,8 @@ func GenConfig() Config {
 		AppID:    *appId,
 		AppHash:  *appHash,
 		BotToken: *botToken,
+
+		GotenbergURL: *gotenbergUrl,
 
 		SqlitePath:  *sqlitePath,
 		SessionPath: *sessionPath,

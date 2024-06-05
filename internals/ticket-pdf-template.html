@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=21cm" />
+    <link rel="stylesheet" href="https://v1.fontapi.ir/css/SahelFD" />
+    <style>
+      body {
+        font-family:
+          Sahel FD,
+          sans-serif;
+        margin: 0;
+        padding: .5cm;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .5cm;
+      }
+
+      .ticket-box {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .ticket-box > div {
+        margin-bottom: 5px;
+      }
+
+      .ticket-title {
+        font-size: 0.8em;
+        text-align: center;
+      }
+
+      .ticket-id {
+        font-weight: bold;
+        font-size: 1.8em;
+        text-align: center;
+        padding: 10px;
+        border: 2px solid #000;
+        border-radius: 5px;
+      }
+
+      .details {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0 5px;
+      }
+
+      .details > div {
+        padding: 5px 0;
+      }
+
+      .label {
+        font-weight: bold;
+      }
+
+      .value {
+        color: #555;
+      }
+    </style>
+  </head>
+  <body dir="rtl">
+    <div class="container">
+      {{range .}}
+      <div class="ticket-box">
+        <div class="ticket-title">ربات ثبت‌نام بلیت</div>
+        <div class="ticket-id">کد بلیت: {{.ID}}</div>
+        <div class="details">
+          <div class="label">نام رویداد:</div>
+          <div class="value">{{.Event.Name}}</div>
+          <div class="label">نام و خانوادگی:</div>
+          <div class="value">{{.User.FirstName}} {{.User.LastName}}</div>
+          <div class="label">شماره تلفن:</div>
+          <div class="value">{{.User.PhoneNumber}}</div>
+          <div class="label">آیدی کاربر:</div>
+          <div class="value">{{.User.ID}}</div>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </body>
+</html>

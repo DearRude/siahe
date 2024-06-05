@@ -96,6 +96,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return exportTicketsCommand(u)
 		case "preview_tickets":
 			return previewTicketsCommand(u)
+		case "print_tickets":
+			return printTicketsCommand(u)
 		case "attend_ticket":
 			return attendTicketCommand(u)
 		case "unattend_ticket":
@@ -767,6 +769,55 @@ func previewTicketsCommand(u in.UpdateMessage) error {
 
 	// Print the info
 	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(event, tickets)...)
+	return err
+}
+
+// parameter: eventID
+func printTicketsCommand(u in.UpdateMessage) error {
+	targetID, err := parseIDFromParam(u)
+	if err != nil {
+		return err
+	}
+
+	// Get event
+	var event database.Event
+	if db.Where("id = ?", targetID).First(&event).Error != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	// Get tickets for that event
+	var tickets []database.Ticket
+	res := db.Preload("User").Preload("Event").Where("event_id = ?", targetID).Order("id").Find(&tickets)
+	if res.Error != nil || len(tickets) <= 0 {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageWaitPDF()...); err != nil {
+		return err
+	}
+
+	printFile, err := sendTicketsPDF(tickets, u)
+	if err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).Media(u.Ctx, printFile); err != nil {
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
 	return err
 }
 

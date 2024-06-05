@@ -687,6 +687,12 @@ func MessagePrintAvailableEvents(username string, events []db.Event) []message.S
 	return m
 }
 
+func MessageWaitPDF() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("ربات در حال ساخت PDF است. کمی صبر کنید..."),
+	}
+}
+
 func boolToText(b bool) string {
 	if b {
 		return "بله"

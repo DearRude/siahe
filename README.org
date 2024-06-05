@@ -114,6 +114,7 @@ A ticket is a sign for users that they can attend events. In order to get a tick
 - ~/delete_ticket <ticket_id>~ removes a ticket from database.
 - ~/export_tickets <event_id>~ exports all tickets of an event to a CSV file.
 - ~/preview_tickets <event_id>~ preview all tickets of an event to a telegram message.
+- ~/print_tickets <event_id>~ generate a printable PDF of all tickets of an event.
 - ~/count_tickets~ count all tickets in database. Since ticket code is a 4-digit code, its count shouldn't exceed 9999. Delete deactivated events for their tickets to be deleted and free up the ticket codes.
 
 ** Licence

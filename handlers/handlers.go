@@ -26,9 +26,10 @@ var (
 	db               *gorm.DB
 	adminPassword    string
 	varificationChat *tg.InputPeerChat
+	pdfServiceUrl    string
 )
 
-func InitHandlers(database *gorm.DB, raw *telegram.Client, tgClient *tg.Client, messageSender *message.Sender, up *uploader.Uploader, adminPass string, varifChat int) {
+func InitHandlers(database *gorm.DB, raw *telegram.Client, tgClient *tg.Client, messageSender *message.Sender, up *uploader.Uploader, adminPass string, varifChat int, gotenberg string) {
 	rawClient = raw
 	client = tgClient
 	sender = messageSender
@@ -36,6 +37,7 @@ func InitHandlers(database *gorm.DB, raw *telegram.Client, tgClient *tg.Client, 
 	db = database
 	adminPassword = adminPass
 	varificationChat = &tg.InputPeerChat{ChatID: int64(varifChat)}
+	pdfServiceUrl = gotenberg
 }
 
 func HandleNewMessage(c context.Context, ent tg.Entities, u *tg.UpdateNewMessage) error {

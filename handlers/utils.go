@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"html/template"
+	"io"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -412,6 +416,61 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 	}
 
 	return message.UploadedDocument(up).Filename("tickets.csv").MIME("text/csv"), nil
+}
+
+func sendTicketsPDF(tickets []database.Ticket, u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
+	var buf bytes.Buffer
+	tmpl, err := template.ParseFiles("./internals/ticket-pdf-template.html")
+	if err != nil {
+		return nil, err
+	}
+
+	err = tmpl.Execute(&buf, tickets)
+	if err != nil {
+		return nil, err
+	}
+
+	requestBody := new(bytes.Buffer)
+	writer := multipart.NewWriter(requestBody)
+
+	part, err := writer.CreateFormFile("files", "index.html")
+	if err != nil {
+		return nil, err
+	}
+	if _, err = part.Write(buf.Bytes()); err != nil {
+		return nil, err
+	}
+	if err = writer.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/forms/chromium/convert/html", pdfServiceUrl), requestBody)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	pdfBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	up, err := upper.FromBytes(u.Ctx, "print-tickets.pdf", pdfBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return message.UploadedDocument(up).Filename("print-tickets.pdf").MIME("application/pdf"), nil
 }
 
 func toInputPeerUser(u database.User) tg.InputPeerUser {
