@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -49,6 +51,14 @@ func getSenderUser(peer tg.PeerClass, ent tg.Entities) (*tg.User, error) {
 		return nil, fmt.Errorf("user not found in entities")
 	}
 	return user, nil
+}
+
+func getExecutableDir() (string, error) {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Abs(filepath.Dir(exePath))
 }
 
 func getInputPeerChat(peer tg.PeerClass) (*tg.InputPeerChat, error) {
@@ -420,7 +430,13 @@ func exportTickets(eventID int, u in.UpdateMessage) (*message.UploadedDocumentBu
 
 func sendTicketsPDF(tickets []database.Ticket, u in.UpdateMessage) (*message.UploadedDocumentBuilder, error) {
 	var buf bytes.Buffer
-	tmpl, err := template.ParseFiles("./internals/ticket-pdf-template.html")
+
+	cwd, err := getExecutableDir()
+	if err != nil {
+		return nil, err
+	}
+
+	tmpl, err := template.ParseFiles(fmt.Sprintf("%s/internals/ticket-pdf-template.html", cwd))
 	if err != nil {
 		return nil, err
 	}
