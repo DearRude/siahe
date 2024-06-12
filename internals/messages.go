@@ -260,7 +260,7 @@ func MessageMessageEventSend(name, text string) []message.StyledTextOption {
 
 func MessageMessageEventExample() []message.StyledTextOption {
 	return []message.StyledTextOption{
-		styling.Plain("/add_event"),
+		styling.Plain("/message_event"),
 		styling.Plain("\n-\n"),
 		styling.Plain("3"),
 		styling.Plain("\n-\n"),
