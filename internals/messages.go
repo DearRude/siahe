@@ -234,11 +234,20 @@ func MessageAddEventExample() []message.StyledTextOption {
 	}
 }
 
-func MessageMessageEventeHelp() []message.StyledTextOption {
+func MessageMessageEventHelp() []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("اطلاعات را با خط تیره - فاصله گذاری کنید. \n"),
 		styling.Plain("اطلاعات مربوط به «پیام‌دادن به ثبت‌نامی های یک رویداد» عبارت‌اند از: "),
 		styling.Bold("آیدی رویداد، پیام\n"),
+		styling.Plain("برای مثال: \n\n"),
+	}
+}
+
+func MessageMessageAllHelp() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("اطلاعات را با خط تیره - فاصله گذاری کنید. \n"),
+		styling.Plain("اطلاعات مربوط به «پیام‌دادن به همه» عبارت‌اند از: "),
+		styling.Bold("پیام\n"),
 		styling.Plain("برای مثال: \n\n"),
 	}
 }
@@ -263,6 +272,14 @@ func MessageMessageEventExample() []message.StyledTextOption {
 		styling.Plain("/message_event"),
 		styling.Plain("\n-\n"),
 		styling.Plain("3"),
+		styling.Plain("\n-\n"),
+		styling.Plain("با سلام به شما. زمان نشست از دوشنبه به سه‌شنبه تغییر پیدا کرده است. لطفاً در زمان مقرر شده حضور یابید."),
+	}
+}
+
+func MessageMessageAllExample() []message.StyledTextOption {
+	return []message.StyledTextOption{
+		styling.Plain("/message_all"),
 		styling.Plain("\n-\n"),
 		styling.Plain("با سلام به شما. زمان نشست از دوشنبه به سه‌شنبه تغییر پیدا کرده است. لطفاً در زمان مقرر شده حضور یابید."),
 	}

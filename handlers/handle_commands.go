@@ -90,6 +90,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return deactivateEventCommand(u)
 		case "message_event":
 			return messageEventCommand(u)
+		case "message_all":
+			return messageAllCommand(u)
 		case "get_ticket":
 			return getTicketCommand(u)
 		case "export_tickets":
@@ -942,7 +944,7 @@ func messageEventCommand(u in.UpdateMessage) error {
 		if err := reactToMessage(u, "👎"); err != nil {
 			return err
 		}
-		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageEventeHelp()...); err != nil {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageEventHelp()...); err != nil {
 			return err
 		}
 
@@ -974,6 +976,47 @@ func messageEventCommand(u in.UpdateMessage) error {
 	for _, ticket := range tickets {
 		peer := toInputPeerUser(ticket.User)
 		if _, _ = sender.To(&peer).StyledText(u.Ctx, in.MessageMessageEventSend(ticket.User.FirstName, params[1])...); err != nil {
+			_ = reactToMessage(u, "👎")
+		}
+	}
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// line parameters: message
+func messageAllCommand(u in.UpdateMessage) error {
+	params := getCommandLines(u)
+	if len(params) != 1 { // only one parameter
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageAllHelp()...); err != nil {
+			return err
+		}
+
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageMessageAllExample()...); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Get all signups
+	var users []database.User
+	if err := db.Find(&users).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err := reactToMessage(u, "👎"); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	for _, user := range users {
+		peer := toInputPeerUser(user)
+		if _, err := sender.To(&peer).StyledText(u.Ctx, in.MessageMessageEventSend(user.FirstName, params[0])...); err != nil {
 			_ = reactToMessage(u, "👎")
 		}
 	}

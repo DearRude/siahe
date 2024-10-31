@@ -84,6 +84,7 @@ docker compose logs -f
 - ~/get_user <user_id>~ prints a user's info by theirs telegram user_id
 - ~/delete_user <user_id>~ deletes a user's account.
 - ~/export_users~ exports all users info into a CSV file.
+- ~/message_all~ sends a message to all signed up users.
 
 **** Place handling
 A place is a database entity that events take place in. For more info, run ~/add_place~ command.
