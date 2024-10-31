@@ -18,7 +18,7 @@ func IsStringPhoneNumber(text string) bool {
 }
 
 func IsStringStudentNumber(text string) bool {
-	phoneRegex := regexp.MustCompile(`^[49]\d{9}$`)
+	phoneRegex := regexp.MustCompile(`^[49](\d{6}|\d{9})$`)
 	return phoneRegex.MatchString(text)
 }
 
