@@ -169,7 +169,12 @@ func signUpAskFumFaculty(u in.UpdateCallback) error {
 		return fmt.Errorf("Error getting callback data")
 	}
 
-	user.FumFaculty = string(data)
+	facultyName := string(data)
+	if !isFumFacultyValid(facultyName) {
+		return fmt.Errorf("Error invalid faculty name")
+	}
+
+	user.FumFaculty = facultyName
 	UserMap.Set(u.PeerUser.UserID, user)
 
 	// Next state: Ask entrance year

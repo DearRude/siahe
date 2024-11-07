@@ -22,6 +22,23 @@ import (
 )
 import _ "embed"
 
+var fumFaculties = []string{
+	"ادبیات و علوم انسانی",
+	"الهیات و معارف اسلامی",
+	"حقوق و علوم سیاسی",
+	"دامپزشکی",
+	"علوم",
+	"علوم اداری و اقتصادی",
+	"علوم تربیتی و روانشناسی",
+	"علوم ریاضی",
+	"علوم ورزشی",
+	"کشاورزی",
+	"معماری و شهرسازی",
+	"منابع طبیعی و محیط زیست",
+	"مهندسی",
+	"هنر نیشابور",
+}
+
 func getCommandName(u in.UpdateMessage) string {
 	text := u.Message.GetMessage()
 	if len(text) <= 0 || text[0] != '/' {
@@ -483,4 +500,13 @@ func toInputPeerUser(u database.User) tg.InputPeerUser {
 		UserID:     u.ID,
 		AccessHash: u.AccessHash,
 	}
+}
+
+func isFumFacultyValid(input string) bool {
+	for _, item := range fumFaculties {
+		if item == input {
+			return true
+		}
+	}
+	return false
 }
