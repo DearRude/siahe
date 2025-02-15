@@ -646,9 +646,10 @@ func MessageTicketSendPayment() []message.StyledTextOption {
 	}
 }
 
-func MessagePreviewTickets(event db.Event, tickets []db.Ticket) []message.StyledTextOption {
+func MessagePreviewTickets(event db.Event, tickets []db.Ticket, startIdx int) []message.StyledTextOption {
 	var m []message.StyledTextOption
-	m = append(m, styling.Bold(fmt.Sprintf("لیست بلیط‌های رویداد %s: \n\n", event.Name)))
+	m = append(m, styling.Bold(fmt.Sprintf("لیست بلیط‌های رویداد %s: \n", event.Name)))
+	m = append(m, styling.Plain("بلیط‌ها به ترتیب خرید زمانی است. شماره ۱ اولین بلیط تهیه شده است. \n\n"))
 
 	for idx, ticket := range tickets {
 		// Generate phone deeplink
@@ -658,7 +659,7 @@ func MessagePreviewTickets(event db.Event, tickets []db.Ticket) []message.Styled
 		}
 		phone = "https://t.me/" + phone
 
-		m = append(m, styling.TextURL(fmt.Sprintf("%d - %s %s - %d \n", idx+1, ticket.User.FirstName, ticket.User.LastName, ticket.ID), phone))
+		m = append(m, styling.TextURL(fmt.Sprintf("%d - %s %s - %d \n", startIdx+idx+1, ticket.User.FirstName, ticket.User.LastName, ticket.ID), phone))
 	}
 
 	return m

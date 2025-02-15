@@ -770,7 +770,12 @@ func previewTicketsCommand(u in.UpdateMessage) error {
 	}
 
 	// Print the info
-	_, err = sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(event, tickets)...)
+	for i := 0; i < len(tickets); i += 50 {
+		if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessagePreviewTickets(event, tickets[i:min(i+50, len(tickets))], i)...); err != nil {
+			return err
+		}
+	}
+
 	return err
 }
 
