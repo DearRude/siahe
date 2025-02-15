@@ -1,6 +1,6 @@
 module github.com/DearRude/siahe
 
-go 1.21
+go 1.23
 
 require (
 	github.com/glebarez/sqlite v1.10.0
