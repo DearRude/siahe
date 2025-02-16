@@ -98,6 +98,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return exportTicketsCommand(u)
 		case "preview_tickets":
 			return previewTicketsCommand(u)
+		case "count_tickets":
+			return countTicketsCommand(u)
 		case "print_tickets":
 			return printTicketsCommand(u)
 		case "attend_ticket":
@@ -108,8 +110,8 @@ func handleCommands(u in.UpdateMessage) error {
 			return deleteTicketCommand(u)
 		case "flush_reserves":
 			return flushReservesCommand(u)
-		case "count_tickets":
-			return countTicketsCommand(u)
+		case "database_storage":
+			return databaseStorageCommand(u)
 		}
 	}
 
@@ -899,6 +901,39 @@ func deleteTicketCommand(u in.UpdateMessage) error {
 	return nil
 }
 
+func countTicketsCommand(u in.UpdateMessage) error {
+	// Get tickets count
+
+	var results []map[string]any
+
+	if err := db.Model(&database.Event{}).
+		Select(
+			"events.name AS name",
+			"COUNT(tickets.id) AS sold",
+			"places.capacity AS capacity",
+		).
+		Joins("JOIN tickets ON events.id = tickets.event_id").
+		Joins("JOIN places ON events.place_id = places.id").
+		Where("events.is_active = ? AND tickets.status IN ?", true, []string{"completed", "attended"}).
+		Group("events.id, places.capacity").
+		Scan(&results).Error; err != nil {
+		if err := reactToMessage(u, "👎"); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := reactToMessage(u, "👍"); err != nil {
+		return err
+	}
+
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageCountTickets(results)...); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func flushReservesCommand(u in.UpdateMessage) error {
 	res := db.Where("status = ?", "reserved").Delete(database.Ticket{})
 	if err := res.Error; err != nil {
@@ -920,7 +955,7 @@ func flushReservesCommand(u in.UpdateMessage) error {
 	return nil
 }
 
-func countTicketsCommand(u in.UpdateMessage) error {
+func databaseStorageCommand(u in.UpdateMessage) error {
 	var count int64
 
 	res := db.Model(database.Ticket{}).Count(&count)
@@ -935,7 +970,7 @@ func countTicketsCommand(u in.UpdateMessage) error {
 		return err
 	}
 
-	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageCountTickets(count)...); err != nil {
+	if _, err := sender.Reply(u.Ent, u.Unm).StyledText(u.Ctx, in.MessageDatabaseStorage(count)...); err != nil {
 		return err
 	}
 

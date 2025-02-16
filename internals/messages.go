@@ -252,11 +252,26 @@ func MessageMessageAllHelp() []message.StyledTextOption {
 	}
 }
 
-func MessageCountTickets(count int64) []message.StyledTextOption {
+func MessageDatabaseStorage(count int64) []message.StyledTextOption {
 	return []message.StyledTextOption{
 		styling.Plain("تعداد همهٔ بلیط‌های در دیتابیس و مقدار پر بودن دیتابیس:\n"),
 		styling.Code(fmt.Sprintf("%d/9999 \n %.2f%%", count, float64(count)/99)),
 	}
+}
+
+func MessageCountTickets(data []map[string]any) []message.StyledTextOption {
+	var m []message.StyledTextOption
+	m = append(m, styling.Bold("تعداد ثبت‌نام تکمیل شده هر رویداد با توجه به ظرفیت مکان: \n\n"))
+
+	for idx, val := range data {
+		m = append(m, styling.Plain(fmt.Sprintf("%d. %s: ", idx+1, val["name"].(string))))
+		m = append(m, styling.Code(fmt.Sprintf("%d/%d", val["sold"].(int64), val["capacity"].(int64))))
+		m = append(m, styling.Plain(" - "))
+		m = append(m, styling.Code(fmt.Sprintf("%d%%", 100*val["sold"].(int64)/val["capacity"].(int64))))
+		m = append(m, styling.Plain("\n"))
+	}
+
+	return m
 }
 
 func MessageMessageEventSend(name, text string) []message.StyledTextOption {
